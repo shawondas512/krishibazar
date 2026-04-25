@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiBazar — AI-Enabled Smart Agricultural Platform</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html" data-i18n="home">Home</a></li>
+    <li><a href="products.html" data-i18n="products">Products</a></li>
+    <li><a href="price-dashboard.html" data-i18n="prices">Market Prices</a></li>
+    <li>
+      <a href="cart.html" style="position:relative">
+        🛒 Cart
+        <span class="cart-count badge badge-success" style="position:absolute;top:-8px;right:-8px;display:none">0</span>
+      </a>
+    </li>
+    <li><a href="login.html" id="nav-login" class="btn-nav" data-i18n="login">Login</a></li>
+    <li><a href="#" id="nav-logout" onclick="logout()" class="btn-nav" style="display:none" data-i18n="logout">Logout</a></li>
+  </ul>
+  <button class="lang-toggle" id="lang-btn" onclick="switchLang()">🇧🇩 বাংলা</button>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1 data-i18n="hero_title">Fresh from Farm to Your Door</h1>
+  <p data-i18n="hero_sub">Buy directly from farmers across Bangladesh. No middlemen. Fair prices.</p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+    <a href="products.html" class="btn btn-secondary btn-lg">🛍️ Shop Now</a>
+    <a href="register.html" class="btn btn-outline btn-lg" style="border-color:white;color:white">🌾 I'm a Farmer</a>
+  </div>
+</section>
+
+<!-- Stats bar -->
+<div style="background:white;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+  <div style="max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);text-align:center;gap:16px">
+    <div><div style="font-size:28px;font-weight:800;color:#1a6b3a">1,200+</div><div style="color:#6c757d;font-size:14px">Farmers</div></div>
+    <div><div style="font-size:28px;font-weight:800;color:#1a6b3a">5,000+</div><div style="color:#6c757d;font-size:14px">Products Listed</div></div>
+    <div><div style="font-size:28px;font-weight:800;color:#1a6b3a">64</div><div style="color:#6c757d;font-size:14px">Districts</div></div>
+    <div><div style="font-size:28px;font-weight:800;color:#1a6b3a">৳2.4 Cr</div><div style="color:#6c757d;font-size:14px">Farmer Earnings</div></div>
+  </div>
+</div>
+
+<!-- Featured Products -->
+<section class="section">
+  <h2 class="section-title" data-i18n="featured">Featured Products</h2>
+  <div class="grid-3" id="products-grid">
+    <!-- Loaded by JS -->
+    <div class="product-card">
+      <img src="https://via.placeholder.com/300x180/28a745/ffffff?text=Rice" alt="Rice">
+      <div class="card-body">
+        <h3 style="margin-bottom:8px">Miniket Rice</h3>
+        <div class="price">৳ 65 / kg</div>
+        <div class="location">📍 Dinajpur, Rangpur</div>
+        <div class="stars" style="margin:8px 0">★★★★★</div>
+        <button class="btn btn-primary btn-full" onclick="addToCart(1,'Miniket Rice',65,'kg','')">Add to Cart</button>
+      </div>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/300x180/fd7e14/ffffff?text=Potato" alt="Potato">
+      <div class="card-body">
+        <h3 style="margin-bottom:8px">Fresh Potato</h3>
+        <div class="price">৳ 28 / kg</div>
+        <div class="location">📍 Munshiganj, Dhaka</div>
+        <div class="stars" style="margin:8px 0">★★★★☆</div>
+        <button class="btn btn-primary btn-full" onclick="addToCart(2,'Fresh Potato',28,'kg','')">Add to Cart</button>
+      </div>
+    </div>
+    <div class="product-card">
+      <img src="https://via.placeholder.com/300x180/e83e8c/ffffff?text=Tomato" alt="Tomato">
+      <div class="card-body">
+        <h3 style="margin-bottom:8px">Red Tomato</h3>
+        <div class="price">৳ 40 / kg</div>
+        <div class="location">📍 Rajshahi</div>
+        <div class="stars" style="margin:8px 0">★★★★★</div>
+        <button class="btn btn-primary btn-full" onclick="addToCart(3,'Red Tomato',40,'kg','')">Add to Cart</button>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:32px">
+    <a href="products.html" class="btn btn-outline">View All Products →</a>
+  </div>
+</section>
+
+<!-- Market Prices Preview -->
+<section style="background:white;padding:60px 24px">
+  <div style="max-width:1200px;margin:0 auto">
+    <h2 class="section-title" data-i18n="market_prices">Today's Market Prices</h2>
+    <table class="price-table">
+      <thead>
+        <tr><th>Crop</th><th>Min Price (৳/kg)</th><th>Max Price (৳/kg)</th><th>Trend</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Rice (Miniket)</td><td>60</td><td>70</td><td class="price-up">▲ 2.5%</td></tr>
+        <tr><td>Potato</td><td>25</td><td>32</td><td class="price-down">▼ 1.2%</td></tr>
+        <tr><td>Onion</td><td>55</td><td>80</td><td class="price-up">▲ 8.3%</td></tr>
+        <tr><td>Tomato</td><td>35</td><td>45</td><td class="price-down">▼ 3.1%</td></tr>
+        <tr><td>Brinjal</td><td>30</td><td>50</td><td class="price-up">▲ 1.8%</td></tr>
+      </tbody>
+    </table>
+    <div style="text-align:center;margin-top:20px">
+      <a href="price-dashboard.html" class="btn btn-primary">Full Price Dashboard →</a>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="section">
+  <h2 class="section-title">How KrishiBazar Works</h2>
+  <div class="grid-3">
+    <div class="card" style="text-align:center;border-top:4px solid #28a745">
+      <div style="font-size:40px;margin-bottom:12px">🌾</div>
+      <h3 style="margin-bottom:8px">1. Farmer Lists</h3>
+      <p style="color:#6c757d">Upload crop photos, set price and quantity. Reach thousands of buyers instantly.</p>
+    </div>
+    <div class="card" style="text-align:center;border-top:4px solid #fd7e14">
+      <div style="font-size:40px;margin-bottom:12px">🛒</div>
+      <h3 style="margin-bottom:8px">2. Buyer Orders</h3>
+      <p style="color:#6c757d">Search, compare prices, and order fresh produce directly from verified farmers.</p>
+    </div>
+    <div class="card" style="text-align:center;border-top:4px solid #1a6b3a">
+      <div style="font-size:40px;margin-bottom:12px">🚚</div>
+      <h3 style="margin-bottom:8px">3. Fast Delivery</h3>
+      <p style="color:#6c757d">Track your order in real-time. Payments via bKash & Nagad. Rate your experience.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-grid">
+    <div>
+      <h4>KrishiBazar</h4>
+      <p style="margin-bottom:12px;font-size:14px">AI-Enabled Smart Agricultural Supply Chain Platform for Bangladesh</p>
+    </div>
+    <div>
+      <h4>Quick Links</h4>
+      <a href="products.html">Products</a>
+      <a href="price-dashboard.html">Market Prices</a>
+      <a href="register.html">Register as Farmer</a>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <a href="#">support@krishibazar.com.bd</a>
+      <a href="#">📞 16789</a>
+      <a href="#">Dhaka, Bangladesh</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2025 KrishiBazar. Developed by Shawon Das | ID: 2321025
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>

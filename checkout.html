@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — KrishiBazar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .checkout-wrap {
+      max-width: 1100px;
+      margin: 36px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 28px;
+    }
+    .checkout-step {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+    }
+    .step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: #1a6b3a;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .step-num.done { background: #28a745; }
+    .step-title { font-size: 16px; font-weight: 700; color: #212529; }
+    .step-subtitle { font-size: 13px; color: #6c757d; }
+    .step-body { padding: 24px; }
+    .payment-option {
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .payment-option:hover { border-color: #28a745; }
+    .payment-option.selected {
+      border-color: #1a6b3a;
+      background: #f0f9f4;
+    }
+    .payment-option input[type="radio"] { accent-color: #1a6b3a; }
+    .payment-icon-big { font-size: 28px; }
+    .payment-label { font-weight: 700; font-size: 15px; }
+    .payment-desc { font-size: 13px; color: #6c757d; }
+    .bkash-input {
+      background: #fce4ec;
+      border: 2px solid #f48fb1;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 14px;
+    }
+    .bkash-input h4 { color: #c2185b; margin-bottom: 14px; font-size: 15px; }
+    .bkash-input input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #f48fb1;
+      border-radius: 8px;
+      font-size: 15px;
+      margin-bottom: 10px;
+      outline: none;
+      background: white;
+    }
+    .nagad-input {
+      background: #fff3e0;
+      border: 2px solid #ffb74d;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 14px;
+    }
+    .nagad-input h4 { color: #e65100; margin-bottom: 14px; font-size: 15px; }
+    .nagad-input input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #ffb74d;
+      border-radius: 8px;
+      font-size: 15px;
+      margin-bottom: 10px;
+      outline: none;
+      background: white;
+    }
+    .order-summary-box {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      padding: 24px;
+      height: fit-content;
+      position: sticky;
+      top: 80px;
+    }
+    .order-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #f5f5f5;
+      font-size: 14px;
+    }
+    .order-item-row:last-child { border-bottom: none; }
+    .success-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    .success-overlay.show { display: flex; }
+    .success-box {
+      background: white;
+      border-radius: 20px;
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 440px;
+      width: 90%;
+      animation: popIn 0.4s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+    .success-icon { font-size: 72px; margin-bottom: 16px; }
+    .success-box h2 { color: #1a6b3a; font-size: 26px; margin-bottom: 10px; }
+    .success-box p { color: #6c757d; margin-bottom: 24px; font-size: 15px; }
+    .otp-pin {
+      display: flex;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .otp-pin input {
+      width: 48px; height: 48px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      border: 2px solid #dee2e6;
+      border-radius: 10px;
+      outline: none;
+    }
+    .otp-pin input:focus { border-color: #28a745; }
+    @media (max-width: 768px) {
+      .checkout-wrap { grid-template-columns: 1fr; }
+      .order-summary-box { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span></a>
+  <ul class="nav-links">
+    <li><a href="cart.html">← Back to Cart</a></li>
+  </ul>
+  <div style="color:white;font-size:14px">🔒 Secure Checkout</div>
+</nav>
+
+<!-- Progress bar -->
+<div style="background:white;padding:16px 24px;border-bottom:1px solid #e9ecef">
+  <div style="max-width:1100px;margin:0 auto;display:flex;
+    align-items:center;gap:0;font-size:13px">
+    <div style="display:flex;align-items:center;gap:6px;color:#28a745;font-weight:700">
+      <span style="width:24px;height:24px;border-radius:50%;background:#28a745;
+        color:white;display:flex;align-items:center;justify-content:center;font-size:12px">✓</span>
+      Cart
+    </div>
+    <div style="flex:1;height:2px;background:#28a745;margin:0 8px"></div>
+    <div style="display:flex;align-items:center;gap:6px;color:#1a6b3a;font-weight:700">
+      <span style="width:24px;height:24px;border-radius:50%;background:#1a6b3a;
+        color:white;display:flex;align-items:center;justify-content:center;font-size:12px">2</span>
+      Checkout
+    </div>
+    <div style="flex:1;height:2px;background:#dee2e6;margin:0 8px"></div>
+    <div style="display:flex;align-items:center;gap:6px;color:#6c757d">
+      <span style="width:24px;height:24px;border-radius:50%;background:#dee2e6;
+        color:#6c757d;display:flex;align-items:center;justify-content:center;font-size:12px">3</span>
+      Confirmation
+    </div>
+  </div>
+</div>
+
+<div class="checkout-wrap">
+
+  <!-- Left: Steps -->
+  <div>
+
+    <!-- Step 1: Delivery Address -->
+    <div class="checkout-step">
+      <div class="step-header">
+        <div class="step-num done">1</div>
+        <div>
+          <div class="step-title">Delivery Address</div>
+          <div class="step-subtitle">Where should we deliver?</div>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="del-name" placeholder="Recipient name">
+          </div>
+          <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="tel" id="del-phone" placeholder="01XXXXXXXXX">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Full Address</label>
+          <textarea id="del-address" rows="2"
+            placeholder="House/Road/Area..."></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>District</label>
+            <select id="del-district">
+              <option value="">-- Select District --</option>
+              <option>Dhaka</option><option>Chittagong</option>
+              <option>Rajshahi</option><option>Khulna</option>
+              <option>Sylhet</option><option>Barishal</option>
+              <option>Rangpur</option><option>Mymensingh</option>
+              <option>Dinajpur</option><option>Comilla</option>
+              <option>Bogura</option><option>Gazipur</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Delivery Type</label>
+            <select id="del-type" onchange="updateDeliveryFee()">
+              <option value="standard">Standard (2–4 days) — ৳60</option>
+              <option value="express">Express (Next day) — ৳120</option>
+              <option value="pickup">Self Pickup — FREE</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Delivery Note (optional)</label>
+          <input type="text" id="del-note"
+            placeholder="e.g. Leave at gate, call before delivery...">
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Payment -->
+    <div class="checkout-step">
+      <div class="step-header">
+        <div class="step-num">2</div>
+        <div>
+          <div class="step-title">Payment Method</div>
+          <div class="step-subtitle">Choose how you want to pay</div>
+        </div>
+      </div>
+      <div class="step-body">
+
+        <div class="payment-option selected" onclick="selectPayment('bkash', this)">
+          <input type="radio" name="payment" checked>
+          <span class="payment-icon-big">💳</span>
+          <div>
+            <div class="payment-label">bKash</div>
+            <div class="payment-desc">Pay via bKash mobile banking</div>
+          </div>
+        </div>
+
+        <div class="payment-option" onclick="selectPayment('nagad', this)">
+          <input type="radio" name="payment">
+          <span class="payment-icon-big">📱</span>
+          <div>
+            <div class="payment-label">Nagad</div>
+            <div class="payment-desc">Pay via Nagad mobile banking</div>
+          </div>
+        </div>
+
+        <div class="payment-option" onclick="selectPayment('cod', this)">
+          <input type="radio" name="payment">
+          <span class="payment-icon-big">💵</span>
+          <div>
+            <div class="payment-label">Cash on Delivery</div>
+            <div class="payment-desc">Pay when your order arrives</div>
+          </div>
+        </div>
+
+        <!-- bKash form -->
+        <div class="bkash-input" id="bkash-form">
+          <h4>💳 bKash Payment</h4>
+          <p style="font-size:13px;color:#6c757d;margin-bottom:12px">
+            Send payment to: <strong style="color:#c2185b">01700-000000</strong>
+            (KrishiBazar bKash) then enter your transaction ID below.
+          </p>
+          <input type="tel" id="bkash-number" placeholder="Your bKash number (01XXXXXXXXX)">
+          <input type="text" id="bkash-txn" placeholder="Transaction ID (e.g. 8N5K2A3P1Q)">
+          <p style="font-size:12px;color:#999;margin-top:4px">
+            Demo: use any 10-character transaction ID
+          </p>
+        </div>
+
+        <!-- Nagad form (hidden) -->
+        <div class="nagad-input" id="nagad-form" style="display:none">
+          <h4>📱 Nagad Payment</h4>
+          <p style="font-size:13px;color:#6c757d;margin-bottom:12px">
+            Send payment to: <strong style="color:#e65100">01800-000000</strong>
+            (KrishiBazar Nagad) then enter your transaction ID below.
+          </p>
+          <input type="tel" id="nagad-number" placeholder="Your Nagad number (01XXXXXXXXX)">
+          <input type="text" id="nagad-txn" placeholder="Transaction ID">
+        </div>
+
+        <!-- COD info (hidden) -->
+        <div id="cod-info" style="display:none;background:#e8f5e9;border-radius:10px;
+          padding:14px;margin-top:12px;font-size:14px;color:#1a6b3a">
+          ✅ Pay in cash when your order is delivered. No advance payment needed.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Place order button -->
+    <button class="btn btn-primary btn-full btn-lg"
+      style="font-size:18px;padding:16px"
+      onclick="placeOrder()">
+      ✅ Place Order Now
+    </button>
+
+    <p style="text-align:center;font-size:13px;color:#6c757d;margin-top:12px">
+      🔒 Your payment is 100% secure and encrypted
+    </p>
+
+  </div>
+
+  <!-- Right: Order summary -->
+  <div class="order-summary-box">
+    <h3 style="font-size:17px;font-weight:700;color:#1a6b3a;
+      margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #e8f5e9">
+      🧾 Order Summary
+    </h3>
+
+    <div id="checkout-items">
+      <!-- Rendered by JS -->
+    </div>
+
+    <div style="border-top:2px solid #e8f5e9;padding-top:14px;margin-top:6px">
+      <div class="summary-row" style="display:flex;justify-content:space-between;
+        font-size:14px;margin-bottom:10px">
+        <span>Subtotal</span>
+        <span id="co-subtotal">৳ 0</span>
+      </div>
+      <div class="summary-row" style="display:flex;justify-content:space-between;
+        font-size:14px;margin-bottom:10px">
+        <span>Delivery</span>
+        <span id="co-delivery">৳ 60</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;
+        font-size:18px;font-weight:800;color:#1a6b3a;margin-top:6px">
+        <span>Total</span>
+        <span id="co-total">৳ 0</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;background:#f0f9f4;border-radius:10px;
+      padding:12px;font-size:13px;color:#1a6b3a">
+      🚚 Estimated delivery: <strong id="delivery-date">Loading...</strong>
+    </div>
+  </div>
+
+</div>
+
+<!-- Success Modal -->
+<div class="success-overlay" id="success-overlay">
+  <div class="success-box">
+    <div class="success-icon">🎉</div>
+    <h2>Order Placed!</h2>
+    <p>Your order has been successfully placed. The farmer will confirm soon.</p>
+    <div style="background:#f0f9f4;border-radius:10px;padding:14px;margin-bottom:20px">
+      <div style="font-size:13px;color:#6c757d">Order ID</div>
+      <div style="font-size:22px;font-weight:800;color:#1a6b3a" id="order-id-display">
+        ORD-0000
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-direction:column">
+      <button class="btn btn-primary btn-full"
+        onclick="window.location.href='order-tracking.html'">
+        📦 Track My Order
+      </button>
+      <button class="btn btn-outline btn-full"
+        onclick="window.location.href='products.html'">
+        Continue Shopping
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+let paymentMethod = 'bkash';
+let deliveryFee = 60;
+
+function selectPayment(method, el) {
+  paymentMethod = method;
+  document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  el.querySelector('input[type="radio"]').checked = true;
+
+  document.getElementById('bkash-form').style.display = method === 'bkash' ? 'block' : 'none';
+  document.getElementById('nagad-form').style.display = method === 'nagad' ? 'block' : 'none';
+  document.getElementById('cod-info').style.display  = method === 'cod'   ? 'block' : 'none';
+}
+
+function updateDeliveryFee() {
+  const type = document.getElementById('del-type').value;
+  deliveryFee = type === 'express' ? 120 : type === 'pickup' ? 0 : 60;
+  renderSummary();
+
+  const days = type === 'express' ? 1 : type === 'pickup' ? 0 : 3;
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  document.getElementById('delivery-date').textContent =
+    days === 0 ? 'Self pickup anytime' :
+    date.toLocaleDateString('en-BD', {weekday:'long',month:'long',day:'numeric'});
+}
+
+function renderSummary() {
+  const cart = getCart();
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const total = subtotal + deliveryFee;
+
+  document.getElementById('checkout-items').innerHTML = cart.map(i => `
+    <div class="order-item-row">
+      <div>
+        <div style="font-weight:600;font-size:14px">${i.name}</div>
+        <div style="font-size:12px;color:#6c757d">${i.qty} ${i.unit} × ৳${i.price}</div>
+      </div>
+      <div style="font-weight:700;color:#1a6b3a">৳ ${(i.price*i.qty).toLocaleString()}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('co-subtotal').textContent = '৳ ' + subtotal.toLocaleString();
+  document.getElementById('co-delivery').textContent =
+    deliveryFee === 0 ? 'FREE' : '৳ ' + deliveryFee;
+  document.getElementById('co-total').textContent = '৳ ' + total.toLocaleString();
+}
+
+function placeOrder() {
+  const name    = document.getElementById('del-name').value.trim();
+  const phone   = document.getElementById('del-phone').value.trim();
+  const address = document.getElementById('del-address').value.trim();
+  const district= document.getElementById('del-district').value;
+
+  if (!name || !phone || !address || !district) {
+    showToast('Please fill in all delivery details', 'error'); return;
+  }
+
+  if (paymentMethod === 'bkash') {
+    const txn = document.getElementById('bkash-txn').value.trim();
+    if (!txn || txn.length < 5) {
+      showToast('Please enter your bKash transaction ID', 'error'); return;
+    }
+  }
+  if (paymentMethod === 'nagad') {
+    const txn = document.getElementById('nagad-txn').value.trim();
+    if (!txn || txn.length < 5) {
+      showToast('Please enter your Nagad transaction ID', 'error'); return;
+    }
+  }
+
+  // Generate order ID
+  const orderId = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+  document.getElementById('order-id-display').textContent = orderId;
+
+  // Save order to localStorage (later: API call)
+  const order = {
+    id: orderId,
+    items: getCart(),
+    delivery: { name, phone, address, district },
+    payment: paymentMethod,
+    status: 'confirmed',
+    date: new Date().toISOString(),
+    total: getCart().reduce((s,i)=>s+i.price*i.qty,0) + deliveryFee
+  };
+  const orders = JSON.parse(localStorage.getItem('myOrders') || '[]');
+  orders.unshift(order);
+  localStorage.setItem('myOrders', JSON.stringify(orders));
+  localStorage.setItem('lastOrder', orderId);
+
+  // Clear cart
+  saveCart([]);
+
+  // Show success
+  document.getElementById('success-overlay').classList.add('show');
+}
+
+// Pre-fill user info
+const user = getUser();
+if (user) {
+  document.getElementById('del-name').value = user.name || '';
+  document.getElementById('del-phone').value = user.phone || '';
+  if (user.district) {
+    const sel = document.getElementById('del-district');
+    for (let o of sel.options) {
+      if (o.text === user.district) { o.selected = true; break; }
+    }
+  }
+}
+
+// Delivery date estimate
+const defDate = new Date();
+defDate.setDate(defDate.getDate() + 3);
+document.getElementById('delivery-date').textContent =
+  defDate.toLocaleDateString('en-BD', {weekday:'long',month:'long',day:'numeric'});
+
+renderSummary();
+</script>
+</body>
+</html>

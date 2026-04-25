@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart — KrishiBazar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .cart-wrap {
+      max-width: 1100px;
+      margin: 36px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 28px;
+    }
+    .cart-item {
+      display: grid;
+      grid-template-columns: 90px 1fr auto;
+      gap: 16px;
+      align-items: center;
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: box-shadow 0.2s;
+    }
+    .cart-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.10); }
+    .cart-item img {
+      width: 90px; height: 90px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #e9ecef;
+    }
+    .item-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .item-meta { font-size: 13px; color: #6c757d; margin-bottom: 10px; }
+    .item-price { font-size: 18px; font-weight: 800; color: #1a6b3a; }
+    .qty-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .qty-control button {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1.5px solid #28a745;
+      background: white;
+      color: #1a6b3a;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-control button:hover { background: #28a745; color: white; }
+    .qty-control .qty-val {
+      font-size: 16px;
+      font-weight: 700;
+      min-width: 28px;
+      text-align: center;
+    }
+    .remove-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #dc3545;
+      padding: 4px;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+      align-self: flex-start;
+    }
+    .remove-btn:hover { opacity: 1; }
+    .summary-box {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      padding: 24px;
+      height: fit-content;
+      position: sticky;
+      top: 80px;
+    }
+    .summary-box h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a6b3a;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e8f5e9;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: #444;
+    }
+    .summary-row.total {
+      font-size: 18px;
+      font-weight: 800;
+      color: #1a6b3a;
+      border-top: 2px solid #e8f5e9;
+      padding-top: 14px;
+      margin-top: 6px;
+    }
+    .promo-row {
+      display: flex;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .promo-row input {
+      flex: 1;
+      padding: 9px 14px;
+      border: 1.5px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    .promo-row input:focus { border-color: #28a745; }
+    .empty-cart {
+      text-align: center;
+      padding: 80px 24px;
+      grid-column: 1 / -1;
+    }
+    .empty-cart .emoji { font-size: 72px; margin-bottom: 16px; }
+    .payment-icons {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .payment-icon {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+    }
+    .saved-badge {
+      background: #d4edda;
+      color: #155724;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      display: inline-block;
+      margin-left: 8px;
+    }
+    @media (max-width: 768px) {
+      .cart-wrap { grid-template-columns: 1fr; }
+      .summary-box { position: static; }
+      .cart-item { grid-template-columns: 70px 1fr auto; }
+      .cart-item img { width: 70px; height: 70px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="price-dashboard.html">Market Prices</a></li>
+    <li>
+      <a href="cart.html" style="color:white;font-weight:700;position:relative">
+        🛒 Cart
+        <span class="cart-count badge badge-success"
+          style="position:absolute;top:-8px;right:-8px;display:none">0</span>
+      </a>
+    </li>
+    <li><a href="login.html" id="nav-login" class="btn-nav">Login</a></li>
+    <li><a href="#" id="nav-logout" onclick="logout()"
+      class="btn-nav" style="display:none">Logout</a></li>
+  </ul>
+  <button class="lang-toggle" id="lang-btn" onclick="switchLang()">🇧🇩 বাংলা</button>
+</nav>
+
+<!-- Breadcrumb -->
+<div style="background:white;padding:12px 24px;font-size:13px;
+  color:#6c757d;border-bottom:1px solid #e9ecef">
+  <a href="index.html" style="color:#28a745;text-decoration:none">Home</a> /
+  <a href="products.html" style="color:#28a745;text-decoration:none">Products</a> /
+  <strong>Cart</strong>
+</div>
+
+<!-- Page title -->
+<div style="background:linear-gradient(135deg,#1a6b3a,#2d8653);
+  padding:24px;color:white">
+  <div style="max-width:1100px;margin:0 auto">
+    <h1 style="font-size:24px">🛒 Your Cart
+      <span id="cart-title-count" style="font-size:16px;opacity:0.8;font-weight:400"></span>
+    </h1>
+  </div>
+</div>
+
+<div class="cart-wrap" id="cart-wrap">
+  <!-- Rendered by JS -->
+</div>
+
+<footer style="margin-top:20px">
+  <div class="footer-bottom" style="margin:0">
+    © 2025 KrishiBazar — Shawon Das | ID: 2321025
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+let discount = 0;
+
+function renderCart() {
+  const cart = getCart();
+  const wrap = document.getElementById('cart-wrap');
+
+  if (cart.length === 0) {
+    wrap.innerHTML = `
+      <div class="empty-cart">
+        <div class="emoji">🛒</div>
+        <h2 style="margin-bottom:10px;color:#1a6b3a">Your cart is empty</h2>
+        <p style="color:#6c757d;margin-bottom:24px">
+          Looks like you haven't added any products yet.
+        </p>
+        <a href="products.html" class="btn btn-primary btn-lg">
+          🌾 Browse Products
+        </a>
+      </div>`;
+    return;
+  }
+
+  const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const delivery = subtotal >= 1000 ? 0 : 60;
+  const discountAmt = Math.round(subtotal * discount);
+  const total = subtotal - discountAmt + delivery;
+
+  document.getElementById('cart-title-count').textContent =
+    `(${cart.length} item${cart.length > 1 ? 's' : ''})`;
+
+  wrap.innerHTML = `
+    <!-- Left: Items -->
+    <div>
+      <div style="display:flex;justify-content:space-between;
+        align-items:center;margin-bottom:16px">
+        <span style="font-size:14px;color:#6c757d">
+          ${cart.length} item${cart.length>1?'s':''} in your cart
+        </span>
+        <button onclick="clearCartAll()"
+          style="background:none;border:none;color:#dc3545;
+          font-size:13px;cursor:pointer;font-weight:600">
+          🗑️ Clear All
+        </button>
+      </div>
+
+      ${cart.map(item => `
+        <div class="cart-item" id="item-${item.id}">
+          <img src="${item.image || 'https://via.placeholder.com/90x90/2d8653/fff?text='+item.name[0]}"
+            alt="${item.name}">
+          <div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-meta">
+              Per ${item.unit}: <strong style="color:#1a6b3a">৳ ${item.price}</strong>
+            </div>
+            <div class="qty-control">
+              <button onclick="updateQty(${item.id}, -1)">−</button>
+              <span class="qty-val">${item.qty}</span>
+              <button onclick="updateQty(${item.id}, 1)">+</button>
+              <span style="font-size:13px;color:#6c757d">${item.unit}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+            <button class="remove-btn" onclick="removeItem(${item.id})" title="Remove">✕</button>
+            <div class="item-price">৳ ${(item.price * item.qty).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('')}
+
+      <!-- Suggested products -->
+      <div class="card" style="margin-top:20px">
+        <h3 style="font-size:15px;color:#1a6b3a;margin-bottom:14px">
+          🌾 You might also like
+        </h3>
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px">
+          ${[
+            {id:99,name:'Green Chilli',price:80,unit:'kg'},
+            {id:98,name:'Garlic',price:150,unit:'kg'},
+            {id:97,name:'Cauliflower',price:45,unit:'piece'},
+          ].map(p => `
+            <div style="min-width:140px;background:#f8f9fa;border-radius:10px;
+              padding:12px;text-align:center;flex-shrink:0">
+              <div style="font-size:28px;margin-bottom:6px">🌶️</div>
+              <div style="font-size:13px;font-weight:700">${p.name}</div>
+              <div style="font-size:12px;color:#1a6b3a;margin:4px 0">৳ ${p.price}/${p.unit}</div>
+              <button class="btn btn-primary" style="padding:5px 12px;font-size:12px;margin-top:4px"
+                onclick="addToCart(${p.id},'${p.name}',${p.price},'${p.unit}','');renderCart()">
+                + Add
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Summary -->
+    <div class="summary-box">
+      <h3>Order Summary</h3>
+
+      <div class="summary-row">
+        <span>Subtotal (${cart.reduce((s,i)=>s+i.qty,0)} items)</span>
+        <span>৳ ${subtotal.toLocaleString()}</span>
+      </div>
+
+      ${discountAmt > 0 ? `
+        <div class="summary-row" style="color:#28a745">
+          <span>Promo Discount</span>
+          <span>− ৳ ${discountAmt.toLocaleString()}</span>
+        </div>` : ''}
+
+      <div class="summary-row">
+        <span>Delivery Fee</span>
+        <span>${delivery === 0
+          ? '<span style="color:#28a745;font-weight:700">FREE</span>'
+          : '৳ ' + delivery}</span>
+      </div>
+
+      ${delivery === 0 ? `
+        <div style="background:#d4edda;border-radius:8px;
+          padding:8px 12px;font-size:13px;color:#155724;margin-bottom:12px">
+          🎉 You qualify for <strong>free delivery!</strong>
+        </div>` : `
+        <div style="background:#fff3cd;border-radius:8px;
+          padding:8px 12px;font-size:13px;color:#856404;margin-bottom:12px">
+          💡 Add ৳${(1000-subtotal).toLocaleString()} more for free delivery
+        </div>`}
+
+      <!-- Promo code -->
+      <div class="promo-row">
+        <input type="text" id="promo-input" placeholder="Promo code (try: KRISHI20)">
+        <button class="btn btn-outline" style="padding:9px 14px;font-size:13px;white-space:nowrap"
+          onclick="applyPromo()">Apply</button>
+      </div>
+
+      <div class="summary-row total">
+        <span>Total</span>
+        <span>৳ ${total.toLocaleString()}</span>
+      </div>
+
+      <button class="btn btn-primary btn-full btn-lg" style="margin-top:8px"
+        onclick="goCheckout()">
+        Proceed to Checkout →
+      </button>
+
+      <a href="products.html" class="btn btn-outline btn-full"
+        style="margin-top:10px;font-size:14px">
+        ← Continue Shopping
+      </a>
+
+      <div class="payment-icons">
+        <span class="payment-icon">💳 bKash</span>
+        <span class="payment-icon">💳 Nagad</span>
+        <span class="payment-icon">💵 COD</span>
+      </div>
+
+      <div style="text-align:center;font-size:12px;color:#6c757d;margin-top:12px">
+        🔒 100% Secure Checkout
+      </div>
+    </div>
+  `;
+}
+
+function updateQty(id, delta) {
+  const cart = getCart();
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty = Math.max(1, item.qty + delta);
+  saveCart(cart);
+  renderCart();
+}
+
+function removeItem(id) {
+  let cart = getCart();
+  cart = cart.filter(i => i.id !== id);
+  saveCart(cart);
+  renderCart();
+  showToast('Item removed from cart');
+}
+
+function clearCartAll() {
+  if (confirm('Clear all items from cart?')) {
+    saveCart([]);
+    renderCart();
+  }
+}
+
+function applyPromo() {
+  const code = document.getElementById('promo-input').value.trim().toUpperCase();
+  if (code === 'KRISHI20') {
+    discount = 0.20;
+    showToast('Promo applied! 20% discount 🎉');
+    renderCart();
+  } else if (code === 'FRESH10') {
+    discount = 0.10;
+    showToast('Promo applied! 10% discount 🎉');
+    renderCart();
+  } else {
+    showToast('Invalid promo code', 'error');
+  }
+}
+
+function goCheckout() {
+  const user = getUser();
+  if (!user) {
+    showToast('Please login to checkout', 'error');
+    setTimeout(() => window.location.href = 'login.html', 1000);
+    return;
+  }
+  window.location.href = 'checkout.html';
+}
+
+renderCart();
+</script>
+</body>
+</html>

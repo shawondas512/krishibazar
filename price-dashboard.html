@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Prices — KrishiBazar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .price-hero {
+      background: linear-gradient(135deg, #1a6b3a 0%, #2d8653 100%);
+      padding: 36px 24px;
+      color: white;
+      text-align: center;
+    }
+    .price-hero h1 { font-size: 28px; margin-bottom: 6px; }
+    .price-hero p { opacity: 0.9; font-size: 15px; }
+    .last-updated {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-top: 8px;
+    }
+    .dashboard-wrap {
+      max-width: 1200px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .top-bar input {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 16px;
+      border: 1.5px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+    .top-bar input:focus { border-color: #28a745; }
+    .top-bar select {
+      padding: 10px 14px;
+      border: 1.5px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 14px;
+      background: white;
+    }
+    .summary-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .sum-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 18px;
+      border-left: 4px solid #28a745;
+    }
+    .sum-card.red { border-left-color: #dc3545; }
+    .sum-card.orange { border-left-color: #fd7e14; }
+    .sum-card.blue { border-left-color: #007bff; }
+    .sum-card .sum-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: #1a6b3a;
+    }
+    .sum-card.red .sum-val { color: #dc3545; }
+    .sum-card.orange .sum-val { color: #fd7e14; }
+    .sum-card.blue .sum-val { color: #007bff; }
+    .sum-card .sum-lbl { font-size: 13px; color: #6c757d; margin-top: 4px; }
+    .chart-box {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .chart-box h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a6b3a;
+      margin-bottom: 16px;
+    }
+    .chart-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .chart-tab {
+      padding: 6px 16px;
+      border: 1.5px solid #dee2e6;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      background: white;
+      transition: all 0.2s;
+    }
+    .chart-tab.active {
+      background: #1a6b3a;
+      color: white;
+      border-color: #1a6b3a;
+    }
+    canvas { max-height: 300px; }
+    .price-table-wrap {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .price-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .price-table-wrap thead th {
+      background: #1a6b3a;
+      color: white;
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      user-select: none;
+    }
+    .price-table-wrap thead th:hover { background: #155d31; }
+    .price-table-wrap tbody td {
+      padding: 13px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .price-table-wrap tbody tr:hover td { background: #f0f9f4; }
+    .trend-up { color: #dc3545; font-weight: 700; }
+    .trend-down { color: #28a745; font-weight: 700; }
+    .trend-flat { color: #6c757d; font-weight: 700; }
+    .crop-icon { font-size: 20px; margin-right: 8px; }
+    .ai-box {
+      background: linear-gradient(135deg, #e8f5e9, #f0f9f4);
+      border: 1px solid #c3e6cb;
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .ai-box h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1a6b3a;
+      margin-bottom: 14px;
+    }
+    .ai-insight {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px;
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border-left: 3px solid #28a745;
+    }
+    .ai-insight.warn { border-left-color: #fd7e14; }
+    .ai-insight.danger { border-left-color: #dc3545; }
+    .ai-icon { font-size: 22px; flex-shrink: 0; }
+    .ai-text { font-size: 13px; color: #333; line-height: 1.6; }
+    .ai-text strong { color: #1a6b3a; }
+    @media (max-width: 768px) {
+      .summary-cards { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .summary-cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="price-dashboard.html" style="color:white;font-weight:700">Market Prices</a></li>
+    <li>
+      <a href="cart.html" style="position:relative">
+        🛒 Cart
+        <span class="cart-count badge badge-success"
+          style="position:absolute;top:-8px;right:-8px;display:none">0</span>
+      </a>
+    </li>
+    <li><a href="login.html" id="nav-login" class="btn-nav">Login</a></li>
+    <li><a href="#" id="nav-logout" onclick="logout()"
+      class="btn-nav" style="display:none">Logout</a></li>
+  </ul>
+  <button class="lang-toggle" id="lang-btn" onclick="switchLang()">🇧🇩 বাংলা</button>
+</nav>
+
+<!-- Hero -->
+<div class="price-hero">
+  <h1>📊 Live Market Price Dashboard</h1>
+  <p>Real-time prices for 20 major agricultural products across Bangladesh</p>
+  <div class="last-updated" id="last-updated">Last updated: loading...</div>
+</div>
+
+<div class="dashboard-wrap">
+
+  <!-- Summary cards -->
+  <div class="summary-cards">
+    <div class="sum-card">
+      <div class="sum-val">20</div>
+      <div class="sum-lbl">Crops Tracked</div>
+    </div>
+    <div class="sum-card red">
+      <div class="sum-val" id="rising-count">0</div>
+      <div class="sum-lbl">Price Rising ▲</div>
+    </div>
+    <div class="sum-card orange">
+      <div class="sum-val" id="falling-count">0</div>
+      <div class="sum-lbl">Price Falling ▼</div>
+    </div>
+    <div class="sum-card blue">
+      <div class="sum-val" id="stable-count">0</div>
+      <div class="sum-lbl">Price Stable →</div>
+    </div>
+  </div>
+
+  <!-- AI Insights -->
+  <div class="ai-box">
+    <h3>🤖 AI Price Insights & Demand Forecast</h3>
+    <div class="ai-insight">
+      <span class="ai-icon">📈</span>
+      <div class="ai-text">
+        <strong>Onion prices rising:</strong> Predicted 12–18% increase over next 2 weeks
+        due to reduced supply from Faridpur and Rajshahi regions. Farmers advised
+        to hold stock for better returns.
+      </div>
+    </div>
+    <div class="ai-insight warn">
+      <span class="ai-icon">⚠️</span>
+      <div class="ai-text">
+        <strong>Potato oversupply alert:</strong> Munshiganj region reporting 35% surplus.
+        Retailers should stock up now — prices expected to drop 8–10% within 5 days.
+      </div>
+    </div>
+    <div class="ai-insight">
+      <span class="ai-icon">🌾</span>
+      <div class="ai-text">
+        <strong>Boro rice harvest peak:</strong> Miniket and BRRI-28 prices stable.
+        High demand from Dhaka wholesale markets — good time to list products.
+      </div>
+    </div>
+    <div class="ai-insight danger">
+      <span class="ai-icon">🚨</span>
+      <div class="ai-text">
+        <strong>Hilsa supply low:</strong> Fishing ban period reducing supply by 60%.
+        Prices expected to spike 20–30% in coastal districts this week.
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart section -->
+  <div class="chart-box">
+    <h3>📉 7-Day Price Trend</h3>
+    <div class="chart-tabs">
+      <button class="chart-tab active" onclick="switchChart('Rice')">Rice</button>
+      <button class="chart-tab" onclick="switchChart('Potato')">Potato</button>
+      <button class="chart-tab" onclick="switchChart('Onion')">Onion</button>
+      <button class="chart-tab" onclick="switchChart('Tomato')">Tomato</button>
+      <button class="chart-tab" onclick="switchChart('Mango')">Mango</button>
+      <button class="chart-tab" onclick="switchChart('Fish')">Hilsa</button>
+    </div>
+    <canvas id="priceChart"></canvas>
+  </div>
+
+  <!-- Search & filter -->
+  <div class="top-bar">
+    <input type="text" id="price-search"
+      placeholder="🔍 Search crop name..." oninput="renderTable()">
+    <select id="cat-filter" onchange="renderTable()">
+      <option value="all">All Categories</option>
+      <option value="Rice">Rice</option>
+      <option value="Vegetable">Vegetables</option>
+      <option value="Fruit">Fruits</option>
+      <option value="Fish">Fish</option>
+      <option value="Spice">Spices</option>
+      <option value="Dairy">Dairy</option>
+    </select>
+    <select id="trend-filter" onchange="renderTable()">
+      <option value="all">All Trends</option>
+      <option value="up">Rising ▲</option>
+      <option value="down">Falling ▼</option>
+      <option value="flat">Stable →</option>
+    </select>
+  </div>
+
+  <!-- Price Table -->
+  <div class="price-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortTable('name')">Crop ↕</th>
+          <th onclick="sortTable('category')">Category ↕</th>
+          <th onclick="sortTable('min')">Min Price ↕</th>
+          <th onclick="sortTable('max')">Max Price ↕</th>
+          <th onclick="sortTable('avg')">Avg Price ↕</th>
+          <th onclick="sortTable('change')">Change ↕</th>
+          <th>Trend</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody id="price-tbody">
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<footer style="margin-top:40px">
+  <div class="footer-bottom" style="margin:0">
+    © 2025 KrishiBazar — Shawon Das | ID: 2321025
+  </div>
+</footer>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="js/main.js"></script>
+<script>
+// ===== 20 Crop Price Data =====
+const cropPrices = [
+  { name:'Miniket Rice',    icon:'🌾', category:'Rice',      min:60,  max:70,  avg:65,  change:+2.5,  trend:'up',   source:'Dinajpur Market' },
+  { name:'BRRI-28 Rice',   icon:'🌾', category:'Rice',      min:52,  max:60,  avg:56,  change:-0.8,  trend:'flat', source:'Comilla Market' },
+  { name:'Fresh Potato',   icon:'🥔', category:'Vegetable', min:25,  max:32,  avg:28,  change:-1.2,  trend:'down', source:'Munshiganj Market' },
+  { name:'Red Onion',      icon:'🧅', category:'Spice',     min:60,  max:85,  avg:75,  change:+8.3,  trend:'up',   source:'Faridpur Market' },
+  { name:'Red Tomato',     icon:'🍅', category:'Vegetable', min:35,  max:48,  avg:40,  change:-3.1,  trend:'down', source:'Rajshahi Market' },
+  { name:'Brinjal',        icon:'🍆', category:'Vegetable', min:30,  max:50,  avg:38,  change:+1.8,  trend:'up',   source:'Khulna Market' },
+  { name:'Green Chilli',   icon:'🌶️', category:'Spice',     min:70,  max:95,  avg:80,  change:+5.2,  trend:'up',   source:'Bogura Market' },
+  { name:'Garlic',         icon:'🧄', category:'Spice',     min:130, max:170, avg:150, change:-2.4,  trend:'down', source:'Rajshahi Market' },
+  { name:'Cauliflower',    icon:'🥦', category:'Vegetable', min:35,  max:55,  avg:45,  change:+0.5,  trend:'flat', source:'Jessore Market' },
+  { name:'Cucumber',       icon:'🥒', category:'Vegetable', min:20,  max:32,  avg:25,  change:-4.0,  trend:'down', source:'Gazipur Market' },
+  { name:'Sweet Mango',    icon:'🥭', category:'Fruit',     min:100, max:140, avg:120, change:+3.6,  trend:'up',   source:'Chapai Market' },
+  { name:'Banana',         icon:'🍌', category:'Fruit',     min:40,  max:65,  avg:50,  change:-1.5,  trend:'flat', source:'Madhupur Market' },
+  { name:'Guava',          icon:'🍈', category:'Fruit',     min:40,  max:60,  avg:50,  change:+2.1,  trend:'up',   source:'Barisal Market' },
+  { name:'Lemon',          icon:'🍋', category:'Fruit',     min:50,  max:72,  avg:60,  change:-0.3,  trend:'flat', source:'Sylhet Market' },
+  { name:'Hilsa Fish',     icon:'🐟', category:'Fish',      min:800, max:1000,avg:900, change:+18.5, trend:'up',   source:'Chandpur Market' },
+  { name:'Catfish (Magur)',icon:'🐠', category:'Fish',      min:300, max:400, avg:350, change:+2.0,  trend:'up',   source:'Mymensingh Market' },
+  { name:'Cow Milk',       icon:'🥛', category:'Dairy',     min:65,  max:80,  avg:70,  change:+1.0,  trend:'flat', source:'Sirajganj Market' },
+  { name:'Mustard Oil',    icon:'🫙', category:'Spice',     min:160, max:190, avg:175, change:-1.8,  trend:'down', source:'Narayanganj Market' },
+  { name:'Jute',           icon:'🌿', category:'Rice',      min:28,  max:36,  avg:32,  change:+4.2,  trend:'up',   source:'Faridpur Market' },
+  { name:'Ginger',         icon:'🫚', category:'Spice',     min:120, max:160, avg:140, change:-3.5,  trend:'down', source:'Sylhet Market' },
+];
+
+// 7-day trend data for chart
+const chartData = {
+  Rice:   { data:[62,63,63,64,64,65,65], color:'#2d8653' },
+  Potato: { data:[30,29,29,28,28,28,28], color:'#fd7e14' },
+  Onion:  { data:[60,62,65,68,70,73,75], color:'#dc3545' },
+  Tomato: { data:[45,44,43,42,41,40,40], color:'#e83e8c' },
+  Mango:  { data:[110,113,115,116,118,119,120], color:'#ffc107' },
+  Fish:   { data:[700,730,760,800,840,880,900], color:'#17a2b8' },
+};
+
+const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+let myChart = null;
+let sortKey = 'name';
+let sortDir = 1;
+
+function switchChart(crop) {
+  document.querySelectorAll('.chart-tab').forEach(t =>
+    t.classList.toggle('active', t.textContent === crop));
+  buildChart(crop);
+}
+
+function buildChart(crop) {
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  const d = chartData[crop];
+  if (myChart) myChart.destroy();
+  myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [{
+        label: crop + ' (৳/kg)',
+        data: d.data,
+        borderColor: d.color,
+        backgroundColor: d.color + '18',
+        borderWidth: 2.5,
+        pointBackgroundColor: d.color,
+        pointRadius: 5,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ৳ ' + ctx.parsed.y + ' / kg'
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: v => '৳' + v
+          },
+          grid: { color: '#f0f0f0' }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderTable() {
+  const q = document.getElementById('price-search').value.toLowerCase();
+  const cat = document.getElementById('cat-filter').value;
+  const trend = document.getElementById('trend-filter').value;
+
+  let list = cropPrices.filter(c => {
+    const mq = c.name.toLowerCase().includes(q);
+    const mc = cat === 'all' || c.category === cat;
+    const mt = trend === 'all' || c.trend === trend;
+    return mq && mc && mt;
+  });
+
+  // Sort
+  list.sort((a, b) => {
+    let av = a[sortKey === 'name' ? 'name' :
+              sortKey === 'category' ? 'category' :
+              sortKey === 'min' ? 'min' :
+              sortKey === 'max' ? 'max' :
+              sortKey === 'avg' ? 'avg' : 'change'];
+    let bv = b[sortKey === 'name' ? 'name' :
+              sortKey === 'category' ? 'category' :
+              sortKey === 'min' ? 'min' :
+              sortKey === 'max' ? 'max' :
+              sortKey === 'avg' ? 'avg' : 'change'];
+    if (typeof av === 'string') return av.localeCompare(bv) * sortDir;
+    return (av - bv) * sortDir;
+  });
+
+  const tbody = document.getElementById('price-tbody');
+  tbody.innerHTML = list.map(c => {
+    const trendClass = c.trend === 'up' ? 'trend-up' :
+                       c.trend === 'down' ? 'trend-down' : 'trend-flat';
+    const trendIcon = c.trend === 'up' ? '▲' :
+                      c.trend === 'down' ? '▼' : '→';
+    const changeSign = c.change > 0 ? '+' : '';
+    return `
+      <tr>
+        <td><span class="crop-icon">${c.icon}</span>${c.name}</td>
+        <td><span class="badge badge-success">${c.category}</span></td>
+        <td><strong>৳ ${c.min}</strong></td>
+        <td><strong>৳ ${c.max}</strong></td>
+        <td>৳ ${c.avg}</td>
+        <td class="${trendClass}">${changeSign}${c.change}%</td>
+        <td class="${trendClass}">${trendIcon}</td>
+        <td style="font-size:12px;color:#6c757d">${c.source}</td>
+      </tr>`;
+  }).join('');
+
+  // Update summary
+  const rising  = cropPrices.filter(c => c.trend === 'up').length;
+  const falling = cropPrices.filter(c => c.trend === 'down').length;
+  const stable  = cropPrices.filter(c => c.trend === 'flat').length;
+  document.getElementById('rising-count').textContent  = rising;
+  document.getElementById('falling-count').textContent = falling;
+  document.getElementById('stable-count').textContent  = stable;
+}
+
+function sortTable(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = 1; }
+  renderTable();
+}
+
+// Timestamp
+const now = new Date();
+document.getElementById('last-updated').textContent =
+  'Last updated: ' + now.toLocaleTimeString('en-BD') +
+  ' — ' + now.toLocaleDateString('en-BD', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+// Init
+buildChart('Rice');
+renderTable();
+</script>
+</body>
+</html>

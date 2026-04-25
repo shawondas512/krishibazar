@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Dashboard — KrishiBazar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tab-nav {
+      display: flex;
+      gap: 4px;
+      background: white;
+      padding: 6px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #6c757d;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      background: #1a6b3a;
+      color: white;
+    }
+    .tab-btn:hover:not(.active) { background: #f0f9f4; color: #1a6b3a; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .order-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 18px;
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      border-left: 4px solid #28a745;
+      font-size: 14px;
+    }
+    .order-row.pending { border-left-color: #ffc107; }
+    .order-row.shipped { border-left-color: #007bff; }
+    .order-row.cancelled { border-left-color: #dc3545; }
+    .order-id { font-weight: 700; color: #1a6b3a; font-size: 13px; }
+    .order-buyer { color: #6c757d; font-size: 13px; }
+    .wallet-box {
+      background: linear-gradient(135deg, #1a6b3a, #28a745);
+      color: white;
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .wallet-box .balance {
+      font-size: 42px;
+      font-weight: 900;
+      margin: 8px 0;
+    }
+    .wallet-actions { display: flex; gap: 12px; margin-top: 16px; }
+    .wallet-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .wallet-btn:hover { background: rgba(255,255,255,0.35); }
+    .upload-zone {
+      border: 2.5px dashed #c3e6cb;
+      border-radius: 14px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #f9fffe;
+      margin-bottom: 20px;
+    }
+    .upload-zone:hover { border-color: #28a745; background: #f0f9f4; }
+    .upload-zone .upload-icon { font-size: 48px; margin-bottom: 12px; }
+    .product-row {
+      display: grid;
+      grid-template-columns: 60px 1fr auto auto auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      font-size: 14px;
+    }
+    .product-thumb {
+      width: 60px; height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #e9ecef;
+    }
+    .notif-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+      font-size: 14px;
+    }
+    .notif-icon { font-size: 22px; flex-shrink: 0; }
+    .notif-unread { border-left: 3px solid #28a745; }
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      margin: 16px;
+    }
+    .modal-box h3 { color: #1a6b3a; margin-bottom: 20px; font-size: 20px; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span></a>
+  <ul class="nav-links">
+    <li><a href="products.html">Marketplace</a></li>
+    <li><a href="price-dashboard.html">Market Prices</a></li>
+    <li><a href="#" onclick="logout()">Logout</a></li>
+  </ul>
+  <button class="lang-toggle" id="lang-btn" onclick="switchLang()">🇧🇩 বাংলা</button>
+</nav>
+
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.1)">
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.2);
+        display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:10px">
+        👨‍🌾
+      </div>
+      <div style="color:white;font-weight:700;font-size:15px" id="sidebar-name">Farmer</div>
+      <div style="color:rgba(255,255,255,0.6);font-size:12px" id="sidebar-loc">Loading...</div>
+      <div style="margin-top:6px">
+        <span class="badge" style="background:rgba(255,255,255,0.15);color:white;font-size:11px">
+          ✅ Verified Farmer
+        </span>
+      </div>
+    </div>
+    <nav style="padding-top:8px">
+      <a class="sidebar-link active" onclick="showTab('overview')" href="#">
+        <span class="icon">📊</span> Overview
+      </a>
+      <a class="sidebar-link" onclick="showTab('orders')" href="#">
+        <span class="icon">📦</span> Orders
+      </a>
+      <a class="sidebar-link" onclick="showTab('products')" href="#">
+        <span class="icon">🌾</span> My Products
+      </a>
+      <a class="sidebar-link" onclick="showTab('wallet')" href="#">
+        <span class="icon">💰</span> Earnings
+      </a>
+      <a class="sidebar-link" onclick="showTab('notifications')" href="#">
+        <span class="icon">🔔</span> Notifications
+        <span class="badge badge-success" style="margin-left:auto">3</span>
+      </a>
+      <a class="sidebar-link" onclick="showTab('profile')" href="#">
+        <span class="icon">⚙️</span> Settings
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div>
+        <h1 style="font-size:22px;font-weight:800;color:#1a6b3a" id="page-title">
+          Good morning! 👋
+        </h1>
+        <p style="color:#6c757d;font-size:14px" id="page-sub">
+          Here's your farm overview for today
+        </p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddProduct()">
+        + Add Product
+      </button>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+        <div class="stat-box">
+          <div class="stat-number">24</div>
+          <div class="stat-label">Total Orders</div>
+        </div>
+        <div class="stat-box" style="border-left-color:#ffc107">
+          <div class="stat-number" style="color:#856404">5</div>
+          <div class="stat-label">Pending Orders</div>
+        </div>
+        <div class="stat-box" style="border-left-color:#007bff">
+          <div class="stat-number" style="color:#007bff">8</div>
+          <div class="stat-label">Products Listed</div>
+        </div>
+        <div class="stat-box" style="border-left-color:#fd7e14">
+          <div class="stat-number" style="color:#fd7e14">৳18,450</div>
+          <div class="stat-label">This Month</div>
+        </div>
+      </div>
+
+      <!-- Recent orders -->
+      <div class="card" style="margin-bottom:20px">
+        <h3 style="color:#1a6b3a;margin-bottom:16px;font-size:17px">
+          📦 Recent Orders
+        </h3>
+        <div id="recent-orders-list"></div>
+      </div>
+
+      <!-- Quick price check -->
+      <div class="card">
+        <h3 style="color:#1a6b3a;margin-bottom:16px;font-size:17px">
+          📊 Today's Top Prices
+        </h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <thead>
+            <tr style="background:#f0f9f4">
+              <th style="padding:10px;text-align:left">Crop</th>
+              <th style="padding:10px">Market Price</th>
+              <th style="padding:10px">Your Listed Price</th>
+              <th style="padding:10px">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:10px">🌾 Miniket Rice</td>
+              <td style="padding:10px;text-align:center">৳ 65/kg</td>
+              <td style="padding:10px;text-align:center">৳ 63/kg</td>
+              <td style="padding:10px;text-align:center">
+                <span class="badge badge-success">Competitive</span></td>
+            </tr>
+            <tr>
+              <td style="padding:10px">🍅 Tomato</td>
+              <td style="padding:10px;text-align:center">৳ 40/kg</td>
+              <td style="padding:10px;text-align:center">৳ 45/kg</td>
+              <td style="padding:10px;text-align:center">
+                <span class="badge badge-warning">Overpriced</span></td>
+            </tr>
+            <tr>
+              <td style="padding:10px">🧅 Onion</td>
+              <td style="padding:10px;text-align:center">৳ 75/kg</td>
+              <td style="padding:10px;text-align:center">৳ 72/kg</td>
+              <td style="padding:10px;text-align:center">
+                <span class="badge badge-success">Good Deal</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div class="tab-panel" id="tab-orders">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="chart-tab active" onclick="filterOrders('all',this)">All (24)</button>
+        <button class="chart-tab" onclick="filterOrders('pending',this)">Pending (5)</button>
+        <button class="chart-tab" onclick="filterOrders('delivered',this)">Delivered (16)</button>
+        <button class="chart-tab" onclick="filterOrders('shipped',this)">Shipped (3)</button>
+      </div>
+      <div id="all-orders-list"></div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div class="tab-panel" id="tab-products">
+      <div id="my-products-list"></div>
+    </div>
+
+    <!-- WALLET TAB -->
+    <div class="tab-panel" id="tab-wallet">
+      <div class="wallet-box">
+        <div style="font-size:14px;opacity:0.85">Total Earnings</div>
+        <div class="balance">৳ 48,250</div>
+        <div style="font-size:14px;opacity:0.75">Available for withdrawal: ৳ 12,300</div>
+        <div class="wallet-actions">
+          <button class="wallet-btn" onclick="showToast('Withdrawal request sent to bKash!')">
+            💸 Withdraw to bKash
+          </button>
+          <button class="wallet-btn" onclick="showToast('Withdrawal request sent to Nagad!')">
+            💸 Withdraw to Nagad
+          </button>
+        </div>
+      </div>
+
+      <!-- Earnings history -->
+      <div class="card">
+        <h3 style="color:#1a6b3a;margin-bottom:16px">Transaction History</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <thead>
+            <tr style="background:#f0f9f4">
+              <th style="padding:10px;text-align:left">Date</th>
+              <th style="padding:10px;text-align:left">Order</th>
+              <th style="padding:10px">Amount</th>
+              <th style="padding:10px">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:10px">2025-04-18</td><td style="padding:10px">ORD-2241</td>
+              <td style="padding:10px;text-align:center;color:#1a6b3a;font-weight:700">+ ৳ 3,250</td>
+              <td style="padding:10px;text-align:center"><span class="badge badge-success">Paid</span></td></tr>
+            <tr><td style="padding:10px">2025-04-15</td><td style="padding:10px">ORD-2238</td>
+              <td style="padding:10px;text-align:center;color:#1a6b3a;font-weight:700">+ ৳ 1,800</td>
+              <td style="padding:10px;text-align:center"><span class="badge badge-success">Paid</span></td></tr>
+            <tr><td style="padding:10px">2025-04-12</td><td style="padding:10px">ORD-2229</td>
+              <td style="padding:10px;text-align:center;color:#1a6b3a;font-weight:700">+ ৳ 5,600</td>
+              <td style="padding:10px;text-align:center"><span class="badge badge-success">Paid</span></td></tr>
+            <tr><td style="padding:10px">2025-04-10</td><td style="padding:10px">ORD-2220</td>
+              <td style="padding:10px;text-align:center;color:#dc3545;font-weight:700">− ৳ 400</td>
+              <td style="padding:10px;text-align:center">
+                <span class="badge badge-danger">Refund</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS TAB -->
+    <div class="tab-panel" id="tab-notifications">
+      <div class="notif-item notif-unread">
+        <span class="notif-icon">📦</span>
+        <div>
+          <div style="font-weight:700">New Order Received!</div>
+          <div style="color:#6c757d;font-size:13px">
+            Karim Retailer ordered 50kg Miniket Rice — ৳ 3,250</div>
+          <div style="color:#aaa;font-size:12px;margin-top:4px">2 hours ago</div>
+        </div>
+      </div>
+      <div class="notif-item notif-unread">
+        <span class="notif-icon">💰</span>
+        <div>
+          <div style="font-weight:700">Payment Received</div>
+          <div style="color:#6c757d;font-size:13px">
+            ৳ 1,800 credited for Order ORD-2238 via bKash</div>
+          <div style="color:#aaa;font-size:12px;margin-top:4px">Yesterday</div>
+        </div>
+      </div>
+      <div class="notif-item notif-unread">
+        <span class="notif-icon">📈</span>
+        <div>
+          <div style="font-weight:700">Price Alert: Onion Rising</div>
+          <div style="color:#6c757d;font-size:13px">
+            Onion prices up 8.3% — consider listing now for better profit</div>
+          <div style="color:#aaa;font-size:12px;margin-top:4px">Today, 9:00 AM</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <span class="notif-icon">⭐</span>
+        <div>
+          <div style="font-weight:700">New Review on Your Product</div>
+          <div style="color:#6c757d;font-size:13px">
+            Sadia gave 5 stars on Miniket Rice — "Very fresh and good quality!"</div>
+          <div style="color:#aaa;font-size:12px;margin-top:4px">2 days ago</div>
+        </div>
+      </div>
+      <div class="notif-item">
+        <span class="notif-icon">🚚</span>
+        <div>
+          <div style="font-weight:700">Order Delivered Successfully</div>
+          <div style="color:#6c757d;font-size:13px">
+            Order ORD-2229 has been delivered to buyer in Dhaka</div>
+          <div style="color:#aaa;font-size:12px;margin-top:4px">3 days ago</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div class="tab-panel" id="tab-profile">
+      <div class="card">
+        <h3 style="color:#1a6b3a;margin-bottom:20px">Profile Settings</h3>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="prof-name" value="Rahim Uddin">
+          </div>
+          <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="text" value="01711111111" disabled
+              style="background:#f8f9fa;color:#6c757d">
+          </div>
+          <div class="form-group">
+            <label>District</label>
+            <select id="prof-district">
+              <option selected>Dinajpur</option>
+              <option>Dhaka</option><option>Rajshahi</option>
+              <option>Khulna</option><option>Chittagong</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Farm Size (acres)</label>
+            <input type="number" value="3.5" id="prof-farm">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Main Crops Grown</label>
+          <input type="text" value="Rice, Tomato, Onion" id="prof-crops">
+        </div>
+        <div class="form-group">
+          <label>NID Number</label>
+          <input type="text" value="19**********" id="prof-nid">
+        </div>
+        <button class="btn btn-primary"
+          onclick="showToast('Profile updated successfully!')">
+          Save Changes
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal-overlay" id="add-product-modal">
+  <div class="modal-box">
+    <h3>🌾 Add New Product</h3>
+    <div class="upload-zone" onclick="document.getElementById('prod-img-input').click()">
+      <div class="upload-icon">📷</div>
+      <div style="font-weight:600;margin-bottom:6px">Click to upload product photo</div>
+      <div style="font-size:13px;color:#6c757d">JPG, PNG up to 5MB</div>
+      <input type="file" id="prod-img-input" accept="image/*"
+        style="display:none" onchange="previewImg(this)">
+      <img id="img-preview" style="display:none;max-height:120px;
+        border-radius:8px;margin-top:12px">
+    </div>
+    <div class="form-group">
+      <label>Product Name</label>
+      <input type="text" id="new-prod-name" placeholder="e.g. Miniket Rice">
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Category</label>
+        <select id="new-prod-cat">
+          <option>Rice</option><option>Vegetable</option>
+          <option>Fruit</option><option>Fish</option>
+          <option>Dairy</option><option>Spice</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Unit</label>
+        <select id="new-prod-unit">
+          <option>kg</option><option>litre</option>
+          <option>piece</option><option>dozen</option><option>মণ</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Price (৳)</label>
+        <input type="number" id="new-prod-price" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Available Quantity</label>
+        <input type="number" id="new-prod-qty" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="new-prod-desc" rows="3"
+        placeholder="Describe your product quality, harvest date..."></textarea>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-primary" style="flex:1" onclick="submitProduct()">
+        📤 List Product
+      </button>
+      <button class="btn btn-outline" style="flex:1"
+        onclick="document.getElementById('add-product-modal').classList.remove('open')">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+// Sample data
+const myOrders = [
+  { id:'ORD-2241', buyer:'Karim Retailer', product:'Miniket Rice',   qty:'50 kg',  total:3250, status:'pending',   date:'2025-04-18' },
+  { id:'ORD-2238', buyer:'Sadia Consumer', product:'Red Tomato',     qty:'10 kg',  total:400,  status:'delivered', date:'2025-04-15' },
+  { id:'ORD-2235', buyer:'Rahim Wholesale',product:'Miniket Rice',   qty:'200 kg', total:13000,status:'delivered', date:'2025-04-12' },
+  { id:'ORD-2229', buyer:'City Shop Ltd',  product:'Onion',          qty:'80 kg',  total:5600, status:'shipped',   date:'2025-04-10' },
+  { id:'ORD-2220', buyer:'Amir Consumer',  product:'Red Tomato',     qty:'5 kg',   total:200,  status:'cancelled', date:'2025-04-08' },
+  { id:'ORD-2210', buyer:'Dhaka Fresh Co', product:'BRRI-28 Rice',   qty:'100 kg', total:5600, status:'delivered', date:'2025-04-05' },
+];
+
+const myProducts = [
+  { name:'Miniket Rice', category:'Rice',      price:63,  stock:450, unit:'kg',  status:'active' },
+  { name:'Red Tomato',   category:'Vegetable', price:45,  stock:180, unit:'kg',  status:'active' },
+  { name:'Red Onion',    category:'Spice',     price:72,  stock:550, unit:'kg',  status:'active' },
+  { name:'Brinjal',      category:'Vegetable', price:38,  stock:0,   unit:'kg',  status:'out' },
+];
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  event.currentTarget.classList.add('active');
+  renderTab(tab);
+}
+
+function renderTab(tab) {
+  if (tab === 'overview' || tab === 'orders') renderOrders();
+  if (tab === 'products') renderProducts();
+}
+
+function renderOrders(filter = 'all') {
+  const list = filter === 'all' ? myOrders :
+    myOrders.filter(o => o.status === filter);
+
+  const html = list.map(o => `
+    <div class="order-row ${o.status}">
+      <div>
+        <div class="order-id">${o.id}</div>
+        <div class="order-buyer">${o.date}</div>
+      </div>
+      <div>
+        <div style="font-weight:600">${o.product}</div>
+        <div class="order-buyer">👤 ${o.buyer} · ${o.qty}</div>
+      </div>
+      <div style="font-weight:700;color:#1a6b3a">৳ ${o.total.toLocaleString()}</div>
+      <div>
+        <span class="badge ${
+          o.status==='delivered' ? 'badge-success' :
+          o.status==='pending'   ? 'badge-warning' :
+          o.status==='shipped'   ? 'badge-info'    : 'badge-danger'
+        }">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span>
+      </div>
+      <div>
+        ${o.status==='pending' ? `
+          <button class="btn btn-primary" style="padding:6px 12px;font-size:13px"
+            onclick="acceptOrder('${o.id}')">Accept</button>` :
+          `<button class="btn btn-outline" style="padding:6px 12px;font-size:13px"
+            onclick="showToast('Order details for ${o.id}')">View</button>`
+        }
+      </div>
+    </div>
+  `).join('');
+
+  const recentEl = document.getElementById('recent-orders-list');
+  const allEl = document.getElementById('all-orders-list');
+  if (recentEl) recentEl.innerHTML = html;
+  if (allEl) allEl.innerHTML = html;
+}
+
+function filterOrders(filter, btn) {
+  document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders(filter);
+}
+
+function acceptOrder(id) {
+  const o = myOrders.find(x => x.id === id);
+  if (o) { o.status = 'shipped'; renderOrders(); }
+  showToast('Order ' + id + ' accepted and marked as shipped! 🚚');
+}
+
+function renderProducts() {
+  document.getElementById('my-products-list').innerHTML = myProducts.map(p => `
+    <div class="product-row">
+      <div style="width:60px;height:60px;border-radius:8px;background:#e9ecef;
+        display:flex;align-items:center;justify-content:center;font-size:26px">🌾</div>
+      <div>
+        <div style="font-weight:700">${p.name}</div>
+        <div style="font-size:13px;color:#6c757d">${p.category} · ${p.unit}</div>
+      </div>
+      <div style="font-weight:700;color:#1a6b3a">৳ ${p.price}/${p.unit}</div>
+      <div style="font-size:13px;color:#6c757d">
+        Stock: <strong style="color:${p.stock>0?'#1a6b3a':'#dc3545'}">${p.stock} ${p.unit}</strong>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" style="padding:6px 12px;font-size:13px"
+          onclick="showToast('Edit product: ${p.name}')">Edit</button>
+        <button class="btn btn-secondary" style="padding:6px 12px;font-size:13px;background:#dc3545"
+          onclick="showToast('${p.name} removed from listing','error')">Remove</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddProduct() {
+  document.getElementById('add-product-modal').classList.add('open');
+}
+
+function previewImg(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const preview = document.getElementById('img-preview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+function submitProduct() {
+  const name = document.getElementById('new-prod-name').value.trim();
+  const price = document.getElementById('new-prod-price').value;
+  const qty = document.getElementById('new-prod-qty').value;
+  if (!name || !price || !qty) {
+    showToast('Please fill all fields', 'error'); return;
+  }
+  myProducts.unshift({
+    name, price: parseInt(price), stock: parseInt(qty),
+    category: document.getElementById('new-prod-cat').value,
+    unit: document.getElementById('new-prod-unit').value,
+    status: 'active'
+  });
+  document.getElementById('add-product-modal').classList.remove('open');
+  showToast('Product listed successfully! 🌾');
+  showTab('products');
+}
+
+// Load user info
+const user = getUser();
+if (user) {
+  document.getElementById('sidebar-name').textContent = user.name;
+  document.getElementById('sidebar-loc').textContent = user.district || 'Bangladesh';
+  document.getElementById('page-title').textContent =
+    'Good morning, ' + user.name.split(' ')[0] + '! 👋';
+}
+
+// Init
+renderOrders();
+renderProducts();
+</script>
+</body>
+</html>

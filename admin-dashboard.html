@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — KrishiBazar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .user-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      gap: 14px; align-items: center;
+      background: white; border-radius: 10px;
+      padding: 14px 18px; margin-bottom: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      font-size: 14px;
+    }
+    .user-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: #1a6b3a; color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; flex-shrink: 0;
+    }
+    .dispute-card {
+      background: white; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 18px; margin-bottom: 12px;
+      border-left: 4px solid #ffc107;
+    }
+    .dispute-card.resolved { border-left-color: #28a745; }
+    .admin-metric {
+      background: white; border-radius: 14px;
+      padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      text-align: center;
+    }
+    .admin-metric .val {
+      font-size: 32px; font-weight: 900; color: #1a6b3a;
+    }
+    .admin-metric .lbl { font-size: 13px; color: #6c757d; margin-top: 4px; }
+    .search-row {
+      display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .search-row input, .search-row select {
+      padding: 9px 14px; border: 1.5px solid #dee2e6;
+      border-radius: 8px; font-size: 14px;
+      outline: none; background: white;
+    }
+    .search-row input { flex: 1; min-width: 160px; }
+    .search-row input:focus { border-color: #28a745; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span> <span style="font-size:12px;background:rgba(255,255,255,0.2);padding:2px 8px;border-radius:10px;margin-left:6px">Admin</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">View Site</a></li>
+    <li><a href="#" onclick="logout()">Logout</a></li>
+  </ul>
+  <div style="color:white;font-size:13px">⚙️ Admin Panel</div>
+</nav>
+
+<div class="dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.1)">
+      <div style="width:52px;height:52px;border-radius:50%;
+        background:rgba(255,255,255,0.2);display:flex;align-items:center;
+        justify-content:center;font-size:22px;margin-bottom:10px">⚙️</div>
+      <div style="color:white;font-weight:700">Admin User</div>
+      <div style="color:rgba(255,255,255,0.6);font-size:12px">Super Administrator</div>
+    </div>
+    <nav style="padding-top:8px">
+      <a class="sidebar-link active" onclick="showTab('overview',this)" href="#">
+        <span class="icon">📊</span> Overview
+      </a>
+      <a class="sidebar-link" onclick="showTab('users',this)" href="#">
+        <span class="icon">👥</span> Users
+        <span class="badge badge-success" style="margin-left:auto">1,248</span>
+      </a>
+      <a class="sidebar-link" onclick="showTab('orders',this)" href="#">
+        <span class="icon">📦</span> All Orders
+      </a>
+      <a class="sidebar-link" onclick="showTab('products',this)" href="#">
+        <span class="icon">🌾</span> Products
+      </a>
+      <a class="sidebar-link" onclick="showTab('disputes',this)" href="#">
+        <span class="icon">⚠️</span> Disputes
+        <span class="badge badge-warning" style="margin-left:auto">3</span>
+      </a>
+      <a class="sidebar-link" onclick="showTab('analytics',this)" href="#">
+        <span class="icon">📈</span> Analytics
+      </a>
+      <a class="sidebar-link" onclick="showTab('settings',this)" href="#">
+        <span class="icon">🔧</span> Settings
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    <div style="display:flex;justify-content:space-between;
+      align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1 style="font-size:22px;font-weight:800;color:#1a6b3a">
+          Admin Dashboard ⚙️
+        </h1>
+        <p style="color:#6c757d;font-size:14px" id="admin-date">Loading date...</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline" style="font-size:13px"
+          onclick="showToast('Report exported as CSV!')">📄 Export Report</button>
+        <button class="btn btn-primary" style="font-size:13px"
+          onclick="showToast('System backup started...')">💾 Backup Now</button>
+      </div>
+    </div>
+
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+
+      <!-- Key metrics -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);
+        gap:16px;margin-bottom:24px">
+        <div class="admin-metric" style="border-top:4px solid #1a6b3a">
+          <div class="val">1,248</div>
+          <div class="lbl">Total Users</div>
+          <div style="font-size:12px;color:#28a745;margin-top:4px">+24 this week</div>
+        </div>
+        <div class="admin-metric" style="border-top:4px solid #007bff">
+          <div class="val" style="color:#007bff">4,872</div>
+          <div class="lbl">Products Listed</div>
+          <div style="font-size:12px;color:#28a745;margin-top:4px">+312 this week</div>
+        </div>
+        <div class="admin-metric" style="border-top:4px solid #fd7e14">
+          <div class="val" style="color:#fd7e14">৳2.4Cr</div>
+          <div class="lbl">Total GMV</div>
+          <div style="font-size:12px;color:#28a745;margin-top:4px">+18% vs last month</div>
+        </div>
+        <div class="admin-metric" style="border-top:4px solid #dc3545">
+          <div class="val" style="color:#dc3545">3</div>
+          <div class="lbl">Open Disputes</div>
+          <div style="font-size:12px;color:#dc3545;margin-top:4px">Needs attention</div>
+        </div>
+      </div>
+
+      <!-- Secondary metrics -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);
+        gap:16px;margin-bottom:24px">
+        <div class="stat-box">
+          <div class="stat-number">842</div>
+          <div class="stat-label">Verified Farmers</div>
+        </div>
+        <div class="stat-box" style="border-left-color:#007bff">
+          <div class="stat-number" style="color:#007bff">298</div>
+          <div class="stat-label">Active Retailers</div>
+        </div>
+        <div class="stat-box" style="border-left-color:#fd7e14">
+          <div class="stat-number" style="color:#fd7e14">108</div>
+          <div class="stat-label">Orders Today</div>
+        </div>
+        <div class="stat-box" style="border-left-color:#6f42c1">
+          <div class="stat-number" style="color:#6f42c1">97.3%</div>
+          <div class="stat-label">Delivery Success</div>
+        </div>
+      </div>
+
+      <!-- Recent activity & alerts -->
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color:#1a6b3a;font-size:16px;margin-bottom:14px">
+            🔔 Recent Activity
+          </h3>
+          ${[
+            {icon:'👤',text:'New farmer registered: Hafiz Uddin, Bogura',time:'5 min ago'},
+            {icon:'📦',text:'Order ORD-2248 placed — ৳4,500',time:'12 min ago'},
+            {icon:'⚠️',text:'Dispute raised on Order ORD-2231',time:'1 hr ago'},
+            {icon:'✅',text:'Farmer Karim Mia verified',time:'2 hrs ago'},
+            {icon:'💰',text:'Payout ৳18,450 sent to Rahim Uddin',time:'3 hrs ago'},
+          ].map(a=>`
+            <div style="display:flex;gap:10px;padding:10px 0;
+              border-bottom:1px solid #f5f5f5;font-size:13px;align-items:flex-start">
+              <span style="font-size:18px">${a.icon}</span>
+              <div style="flex:1">${a.text}</div>
+              <span style="color:#aaa;font-size:11px;white-space:nowrap">${a.time}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="card">
+          <h3 style="color:#1a6b3a;font-size:16px;margin-bottom:14px">
+            🚨 System Alerts
+          </h3>
+          <div class="alert alert-danger">
+            ⚠️ 3 disputes pending resolution for over 48 hours.
+          </div>
+          <div class="alert alert-info">
+            ℹ️ Daily database backup completed successfully at 2:00 AM.
+          </div>
+          <div class="alert alert-success">
+            ✅ All payment gateways (bKash, Nagad) are operating normally.
+          </div>
+          <div class="alert" style="background:#fff3cd;color:#856404">
+            ⏳ 14 farmer verification requests pending review.
+          </div>
+
+          <h3 style="color:#1a6b3a;font-size:16px;margin:16px 0 12px">
+            📊 Platform Health
+          </h3>
+          ${[
+            {label:'Server Uptime',val:99.8,color:'#28a745'},
+            {label:'API Response',val:94,color:'#28a745'},
+            {label:'Payment Success Rate',val:98.2,color:'#28a745'},
+            {label:'Delivery Success',val:97.3,color:'#ffc107'},
+          ].map(h=>`
+            <div style="margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;
+                font-size:13px;margin-bottom:4px">
+                <span>${h.label}</span>
+                <strong style="color:${h.color}">${h.val}%</strong>
+              </div>
+              <div style="background:#e9ecef;border-radius:20px;height:6px">
+                <div style="width:${h.val}%;background:${h.color};
+                  height:6px;border-radius:20px;transition:width 0.5s"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div class="tab-panel" id="tab-users">
+      <div class="search-row">
+        <input type="text" id="user-search" placeholder="🔍 Search by name or phone..."
+          oninput="renderUsers()">
+        <select id="role-filter" onchange="renderUsers()">
+          <option value="all">All Roles</option>
+          <option value="farmer">Farmers</option>
+          <option value="retailer">Retailers</option>
+          <option value="consumer">Consumers</option>
+        </select>
+        <select id="status-filter" onchange="renderUsers()">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+        </select>
+      </div>
+      <div id="users-list"></div>
+    </div>
+
+    <!-- ORDERS TAB -->
+    <div class="tab-panel" id="tab-orders">
+      <div class="search-row">
+        <input type="text" placeholder="🔍 Search order ID or buyer name...">
+        <select>
+          <option>All Status</option>
+          <option>Pending</option><option>Confirmed</option>
+          <option>Shipped</option><option>Delivered</option><option>Cancelled</option>
+        </select>
+      </div>
+      <div id="admin-orders-list"></div>
+    </div>
+
+    <!-- PRODUCTS TAB -->
+    <div class="tab-panel" id="tab-products">
+      <div class="search-row">
+        <input type="text" placeholder="🔍 Search products...">
+        <select>
+          <option>All Categories</option>
+          <option>Rice</option><option>Vegetable</option>
+          <option>Fruit</option><option>Fish</option><option>Spice</option>
+        </select>
+        <select>
+          <option>All Status</option>
+          <option>Active</option><option>Flagged</option><option>Removed</option>
+        </select>
+      </div>
+      <div id="admin-products-list"></div>
+    </div>
+
+    <!-- DISPUTES TAB -->
+    <div class="tab-panel" id="tab-disputes">
+      <div id="disputes-list"></div>
+    </div>
+
+    <!-- ANALYTICS TAB -->
+    <div class="tab-panel" id="tab-analytics">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);
+        gap:16px;margin-bottom:24px">
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;margin-bottom:8px">📈</div>
+          <div style="font-size:22px;font-weight:800;color:#1a6b3a">+34%</div>
+          <div style="color:#6c757d;font-size:13px">Orders vs Last Month</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;margin-bottom:8px">👥</div>
+          <div style="font-size:22px;font-weight:800;color:#007bff">+18%</div>
+          <div style="color:#6c757d;font-size:13px">New Users This Month</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;margin-bottom:8px">💰</div>
+          <div style="font-size:22px;font-weight:800;color:#fd7e14">৳2.4Cr</div>
+          <div style="color:#6c757d;font-size:13px">Total GMV (All Time)</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="color:#1a6b3a;margin-bottom:16px">Top Selling Products</h3>
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <thead><tr style="background:#f0f9f4">
+            <th style="padding:10px;text-align:left">#</th>
+            <th style="padding:10px;text-align:left">Product</th>
+            <th style="padding:10px">Orders</th>
+            <th style="padding:10px">Revenue</th>
+            <th style="padding:10px">Top Farmer</th>
+          </tr></thead>
+          <tbody>
+            ${[
+              ['1','🌾 Miniket Rice','342','৳22,230','Rahim Uddin'],
+              ['2','🧅 Red Onion','289','৳21,675','Monir Khan'],
+              ['3','🍅 Red Tomato','256','৳10,240','Salam Sheikh'],
+              ['4','🥔 Potato','234','৳6,552','Karim Mia'],
+              ['5','🐟 Hilsa Fish','98','৳88,200','Anwar Ali'],
+            ].map(r=>`
+              <tr>
+                <td style="padding:10px;font-weight:700;color:#1a6b3a">${r[0]}</td>
+                <td style="padding:10px">${r[1]}</td>
+                <td style="padding:10px;text-align:center">${r[2]}</td>
+                <td style="padding:10px;text-align:center;font-weight:700;color:#1a6b3a">${r[3]}</td>
+                <td style="padding:10px;text-align:center">${r[4]}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h3 style="color:#1a6b3a;margin-bottom:16px">Revenue by Division</h3>
+        ${[
+          {div:'Dhaka',pct:38,amt:'৳91,200'},
+          {div:'Rajshahi',pct:24,amt:'৳57,600'},
+          {div:'Chittagong',pct:18,amt:'৳43,200'},
+          {div:'Khulna',pct:10,amt:'৳24,000'},
+          {div:'Others',pct:10,amt:'৳24,000'},
+        ].map(d=>`
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;
+              font-size:14px;margin-bottom:6px">
+              <span style="font-weight:600">${d.div}</span>
+              <span>${d.amt} <span style="color:#6c757d">(${d.pct}%)</span></span>
+            </div>
+            <div style="background:#e9ecef;border-radius:20px;height:10px">
+              <div style="width:${d.pct}%;background:linear-gradient(90deg,#1a6b3a,#28a745);
+                height:10px;border-radius:20px"></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div class="tab-panel" id="tab-settings">
+      <div class="card">
+        <h3 style="color:#1a6b3a;margin-bottom:20px">Platform Settings</h3>
+        <div class="form-group">
+          <label>Platform Commission Rate (%)</label>
+          <input type="number" value="3" min="0" max="20">
+        </div>
+        <div class="form-group">
+          <label>Standard Delivery Fee (৳)</label>
+          <input type="number" value="60">
+        </div>
+        <div class="form-group">
+          <label>Free Delivery Threshold (৳)</label>
+          <input type="number" value="1000">
+        </div>
+        <div class="form-group">
+          <label>Minimum Withdrawal Amount (৳)</label>
+          <input type="number" value="500">
+        </div>
+        <div class="form-group">
+          <label>OTP Expiry (minutes)</label>
+          <input type="number" value="5">
+        </div>
+        <button class="btn btn-primary"
+          onclick="showToast('Settings saved! ✓')">Save Settings</button>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <h3 style="color:#1a6b3a;margin-bottom:16px">Maintenance Mode</h3>
+        <div style="display:flex;justify-content:space-between;
+          align-items:center;padding:14px;background:#f8f9fa;border-radius:10px">
+          <div>
+            <div style="font-weight:700">Enable Maintenance Mode</div>
+            <div style="font-size:13px;color:#6c757d">
+              Users will see a maintenance page while you update the system
+            </div>
+          </div>
+          <button class="btn btn-outline" style="border-color:#dc3545;color:#dc3545"
+            onclick="showToast('Maintenance mode toggle (disabled in demo)','error')">
+            Enable
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+const adminUsers = [
+  { name:'Rahim Uddin',    phone:'01711111111', role:'farmer',   district:'Dinajpur',   status:'active',    orders:24, joined:'2024-12-01' },
+  { name:'Karim Retailer', phone:'01722222222', role:'retailer', district:'Dhaka',      status:'active',    orders:18, joined:'2025-01-15' },
+  { name:'Sadia Consumer', phone:'01733333333', role:'consumer', district:'Dhaka',      status:'active',    orders:12, joined:'2025-02-10' },
+  { name:'Monir Khan',     phone:'01755555555', role:'farmer',   district:'Faridpur',   status:'active',    orders:31, joined:'2024-11-20' },
+  { name:'Hafiz Uddin',    phone:'01766666666', role:'farmer',   district:'Khulna',     status:'suspended', orders:5,  joined:'2025-03-01' },
+  { name:'Razu Mia',       phone:'01777777777', role:'farmer',   district:'Bogura',     status:'active',    orders:14, joined:'2024-10-05' },
+  { name:'Amir Consumer',  phone:'01788888888', role:'consumer', district:'Chittagong', status:'active',    orders:7,  joined:'2025-01-30' },
+];
+
+const adminOrders = [
+  { id:'ORD-2248', buyer:'Sadia Consumer',  farmer:'Rahim Uddin',   product:'Miniket Rice × 20kg', total:1300, status:'pending',   date:'2025-04-20' },
+  { id:'ORD-2241', buyer:'Karim Retailer',  farmer:'Rahim Uddin',   product:'Miniket Rice × 50kg', total:3250, status:'shipped',   date:'2025-04-18' },
+  { id:'ORD-2238', buyer:'Sadia Consumer',  farmer:'Salam Sheikh',  product:'Red Tomato × 10kg',   total:400,  status:'delivered', date:'2025-04-15' },
+  { id:'ORD-2231', buyer:'Amir Consumer',   farmer:'Razu Mia',      product:'Green Chilli × 2kg',  total:160,  status:'cancelled', date:'2025-04-12' },
+];
+
+const adminProducts = [
+  { name:'Miniket Rice',    farmer:'Rahim Uddin',  price:65, stock:450, category:'Rice',      status:'active'  },
+  { name:'Red Tomato',      farmer:'Salam Sheikh', price:40, stock:180, category:'Vegetable', status:'active'  },
+  { name:'Green Chilli',    farmer:'Razu Mia',     price:80, stock:0,   category:'Spice',     status:'out'     },
+  { name:'Brinjal',         farmer:'Hafiz Uddin',  price:35, stock:300, category:'Vegetable', status:'flagged' },
+];
+
+const disputes = [
+  { id:'DSP-001', order:'ORD-2231', buyer:'Amir Consumer', farmer:'Razu Mia', issue:'Product quality did not match listing photos.', status:'open', date:'2025-04-13' },
+  { id:'DSP-002', order:'ORD-2220', buyer:'Rahim Wholesale', farmer:'Monir Khan', issue:'Delivered 5kg short of the 80kg ordered.', status:'open', date:'2025-04-11' },
+  { id:'DSP-003', order:'ORD-2198', buyer:'City Shop Ltd', farmer:'Karim Mia', issue:'Potatoes had significant rot upon delivery.', status:'resolved', date:'2025-04-05' },
+];
+
+function renderUsers() {
+  const q = (document.getElementById('user-search')?.value||'').toLowerCase();
+  const role = document.getElementById('role-filter')?.value || 'all';
+  const status = document.getElementById('status-filter')?.value || 'all';
+
+  let list = adminUsers.filter(u => {
+    const mq = u.name.toLowerCase().includes(q) || u.phone.includes(q);
+    const mr = role==='all' || u.role===role;
+    const ms = status==='all' || u.status===status;
+    return mq && mr && ms;
+  });
+
+  document.getElementById('users-list').innerHTML = list.map(u=>`
+    <div class="user-row">
+      <div class="user-avatar">${u.name[0]}</div>
+      <div>
+        <div style="font-weight:700">${u.name}</div>
+        <div style="font-size:12px;color:#6c757d">
+          📞 ${u.phone} · 📍 ${u.district} · Joined ${u.joined}
+        </div>
+      </div>
+      <span class="badge badge-success">${u.role}</span>
+      <span class="badge ${u.status==='active'?'badge-success':'badge-danger'}">
+        ${u.status}
+      </span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px"
+          onclick="showToast('Viewing ${u.name} profile')">View</button>
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px;
+          border-color:${u.status==='active'?'#dc3545':'#28a745'};
+          color:${u.status==='active'?'#dc3545':'#28a745'}"
+          onclick="toggleUser('${u.phone}')">
+          ${u.status==='active'?'Suspend':'Restore'}
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleUser(phone) {
+  const u = adminUsers.find(x=>x.phone===phone);
+  if (u) {
+    u.status = u.status==='active' ? 'suspended' : 'active';
+    renderUsers();
+    showToast(u.name + ' ' + (u.status==='active'?'restored':'suspended'));
+  }
+}
+
+function renderAdminOrders() {
+  document.getElementById('admin-orders-list').innerHTML = adminOrders.map(o=>`
+    <div style="background:white;border-radius:10px;
+      box-shadow:0 1px 6px rgba(0,0,0,0.06);padding:16px;
+      margin-bottom:10px;font-size:14px">
+      <div style="display:flex;justify-content:space-between;
+        align-items:flex-start;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-weight:800;color:#1a6b3a">${o.id}</div>
+          <div style="color:#444;margin:3px 0">${o.product}</div>
+          <div style="color:#6c757d;font-size:13px">
+            👤 ${o.buyer} → 👨‍🌾 ${o.farmer} · ${o.date}
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-weight:800;color:#1a6b3a;font-size:16px">
+            ৳ ${o.total.toLocaleString()}
+          </span>
+          <span class="badge ${
+            o.status==='delivered'?'badge-success':
+            o.status==='pending'?'badge-warning':'badge-danger'
+          }">${o.status}</span>
+          <button class="btn btn-outline" style="padding:5px 10px;font-size:12px"
+            onclick="showToast('Order details: ${o.id}')">View</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminProducts() {
+  document.getElementById('admin-products-list').innerHTML = adminProducts.map(p=>`
+    <div style="background:white;border-radius:10px;
+      box-shadow:0 1px 6px rgba(0,0,0,0.06);padding:14px;
+      margin-bottom:10px;font-size:14px;
+      display:grid;grid-template-columns:1fr auto auto auto;
+      gap:14px;align-items:center">
+      <div>
+        <div style="font-weight:700">${p.name}</div>
+        <div style="font-size:13px;color:#6c757d">
+          👨‍🌾 ${p.farmer} · ${p.category}
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:700;color:#1a6b3a">৳ ${p.price}/kg</div>
+        <div style="font-size:12px;color:#6c757d">Stock: ${p.stock}</div>
+      </div>
+      <span class="badge ${
+        p.status==='active'?'badge-success':
+        p.status==='flagged'?'badge-warning':'badge-danger'
+      }">${p.status}</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:12px"
+          onclick="showToast('Viewing ${p.name}')">View</button>
+        ${p.status==='flagged'?`
+          <button class="btn btn-outline" style="padding:5px 10px;font-size:12px;
+            border-color:#dc3545;color:#dc3545"
+            onclick="showToast('${p.name} removed','error')">Remove</button>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDisputes() {
+  document.getElementById('disputes-list').innerHTML = disputes.map(d=>`
+    <div class="dispute-card ${d.status}">
+      <div style="display:flex;justify-content:space-between;
+        align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div style="flex:1">
+          <div style="font-weight:800;color:#1a6b3a;margin-bottom:4px">
+            ${d.id} — Order ${d.order}
+          </div>
+          <div style="font-size:13px;color:#6c757d;margin-bottom:8px">
+            👤 ${d.buyer} vs 👨‍🌾 ${d.farmer} · ${d.date}
+          </div>
+          <div style="font-size:14px;background:#fff;border-radius:8px;
+            padding:10px;border-left:3px solid #ffc107">
+            📋 ${d.issue}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:120px">
+          <span class="badge ${d.status==='resolved'?'badge-success':'badge-warning'}">
+            ${d.status}
+          </span>
+          ${d.status==='open'?`
+            <button class="btn btn-primary" style="padding:7px 14px;font-size:13px"
+              onclick="resolveDispute('${d.id}')">✓ Resolve</button>
+            <button class="btn btn-outline" style="padding:7px 14px;font-size:13px;
+              border-color:#dc3545;color:#dc3545"
+              onclick="showToast('Refund initiated for ${d.id}')">↩ Refund</button>`:''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function resolveDispute(id) {
+  const d = disputes.find(x=>x.id===id);
+  if (d) { d.status = 'resolved'; renderDisputes(); }
+  showToast('Dispute ' + id + ' resolved! ✓');
+}
+
+function showTab(tab, el) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if (el) el.classList.add('active');
+  if (tab==='users') renderUsers();
+  if (tab==='orders') renderAdminOrders();
+  if (tab==='products') renderAdminProducts();
+  if (tab==='disputes') renderDisputes();
+}
+
+// Date
+const now = new Date();
+document.getElementById('admin-date').textContent =
+  now.toLocaleDateString('en-BD', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+// Init
+renderUsers();
+renderAdminOrders();
+renderAdminProducts();
+renderDisputes();
+</script>
+</body>
+</html>

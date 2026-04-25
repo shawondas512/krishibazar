@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Detail — KrishiBazar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .detail-layout {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+    .product-image-box {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .product-image-box img {
+      width: 100%;
+      height: 340px;
+      object-fit: cover;
+    }
+    .product-info { display: flex; flex-direction: column; gap: 16px; }
+    .product-info h1 { font-size: 28px; color: #1a6b3a; }
+    .big-price { font-size: 36px; font-weight: 800; color: #1a6b3a; }
+    .big-price span { font-size: 18px; font-weight: 400; color: #6c757d; }
+    .farmer-box {
+      background: #f0f9f4;
+      border: 1px solid #c3e6cb;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .farmer-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: #1a6b3a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: white; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .qty-selector {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .qty-btn {
+      width: 38px; height: 38px;
+      border-radius: 8px;
+      border: 2px solid #28a745;
+      background: white;
+      font-size: 20px;
+      cursor: pointer;
+      color: #1a6b3a;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .qty-btn:hover { background: #28a745; color: white; }
+    .qty-num {
+      font-size: 22px;
+      font-weight: 700;
+      min-width: 36px;
+      text-align: center;
+    }
+    .review-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e9ecef;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .review-name { font-weight: 700; font-size: 14px; }
+    .review-date { font-size: 12px; color: #6c757d; }
+    .review-stars { color: #ffc107; font-size: 15px; }
+    .review-text { font-size: 14px; color: #444; line-height: 1.6; }
+    .add-review {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      border: 1px solid #e9ecef;
+    }
+    .star-input { display: flex; gap: 6px; margin-bottom: 12px; }
+    .star-input span {
+      font-size: 26px; cursor: pointer; color: #dee2e6;
+      transition: color 0.15s;
+    }
+    .star-input span.lit { color: #ffc107; }
+    @media (max-width: 768px) {
+      .detail-layout { grid-template-columns: 1fr; gap: 20px; margin: 20px auto; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="price-dashboard.html">Market Prices</a></li>
+    <li>
+      <a href="cart.html" style="position:relative">
+        🛒 Cart
+        <span class="cart-count badge badge-success"
+          style="position:absolute;top:-8px;right:-8px;display:none">0</span>
+      </a>
+    </li>
+    <li><a href="login.html" id="nav-login" class="btn-nav">Login</a></li>
+    <li><a href="#" id="nav-logout" onclick="logout()"
+      class="btn-nav" style="display:none">Logout</a></li>
+  </ul>
+  <button class="lang-toggle" id="lang-btn" onclick="switchLang()">🇧🇩 বাংলা</button>
+</nav>
+
+<!-- Breadcrumb -->
+<div style="background:white;padding:12px 24px;font-size:13px;
+  color:#6c757d;border-bottom:1px solid #e9ecef">
+  <a href="index.html" style="color:#28a745;text-decoration:none">Home</a> /
+  <a href="products.html" style="color:#28a745;text-decoration:none">Products</a> /
+  <span id="breadcrumb-name">Loading...</span>
+</div>
+
+<!-- Product Detail -->
+<div class="detail-layout">
+
+  <!-- Left: Image -->
+  <div>
+    <div class="product-image-box">
+      <img id="prod-img" src="" alt="Product">
+    </div>
+    <!-- Thumbnails placeholder -->
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <div style="width:70px;height:70px;border-radius:8px;
+        background:#e9ecef;border:2px solid #28a745"></div>
+      <div style="width:70px;height:70px;border-radius:8px;background:#e9ecef"></div>
+      <div style="width:70px;height:70px;border-radius:8px;background:#e9ecef"></div>
+    </div>
+  </div>
+
+  <!-- Right: Info -->
+  <div class="product-info">
+    <div>
+      <span class="badge badge-success" id="prod-category">Vegetable</span>
+      <h1 id="prod-title">Loading...</h1>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="review-stars" id="prod-stars">★★★★★</span>
+      <span style="font-size:13px;color:#6c757d" id="prod-rating-txt">(5.0) · 24 reviews</span>
+    </div>
+
+    <div class="big-price">
+      ৳ <span id="prod-price">0</span>
+      <span>/ <span id="prod-unit">kg</span></span>
+    </div>
+
+    <div style="background:#fff3cd;border-radius:10px;padding:12px;font-size:13px">
+      📊 Market average: <strong id="prod-market-avg">৳ 0 / kg</strong>
+      — <span id="price-compare" style="color:#28a745;font-weight:700">You save ৳0</span>
+    </div>
+
+    <!-- Farmer info -->
+    <div class="farmer-box">
+      <div class="farmer-avatar" id="farmer-initials">R</div>
+      <div>
+        <div style="font-weight:700;font-size:15px" id="farmer-name">Rahim Uddin</div>
+        <div style="font-size:13px;color:#6c757d">📍 <span id="farmer-loc">Dinajpur</span></div>
+        <div style="font-size:13px;color:#6c757d">
+          🌾 Verified Farmer &nbsp; ✅ 200+ orders
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock & Qty -->
+    <div style="font-size:14px;color:#6c757d">
+      📦 Available Stock: <strong id="prod-stock" style="color:#1a6b3a">0 kg</strong>
+    </div>
+
+    <div class="qty-selector">
+      <span style="font-size:14px;font-weight:600">Quantity:</span>
+      <button class="qty-btn" onclick="changeQty(-1)">−</button>
+      <span class="qty-num" id="qty-display">1</span>
+      <button class="qty-btn" onclick="changeQty(1)">+</button>
+      <span style="font-size:14px;color:#6c757d" id="unit-label">kg</span>
+    </div>
+
+    <div style="font-size:16px;font-weight:700;color:#1a6b3a">
+      Total: ৳ <span id="total-price">0</span>
+    </div>
+
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-primary" style="flex:1;font-size:16px"
+        onclick="doAddToCart()">🛒 Add to Cart</button>
+      <button class="btn btn-secondary" style="flex:1;font-size:16px"
+        onclick="buyNow()">⚡ Buy Now</button>
+    </div>
+
+    <!-- Delivery info -->
+    <div style="background:#f8f9fa;border-radius:10px;padding:14px;font-size:13px">
+      <div>🚚 <strong>Delivery:</strong> 2–4 business days</div>
+      <div style="margin-top:6px">💳 <strong>Payment:</strong> bKash, Nagad, Cash on Delivery</div>
+      <div style="margin-top:6px">🔄 <strong>Returns:</strong> 3-day return policy</div>
+    </div>
+  </div>
+</div>
+
+<!-- Reviews Section -->
+<div style="max-width:1100px;margin:0 auto 60px;padding:0 24px">
+  <div class="card">
+    <h2 style="font-size:22px;color:#1a6b3a;margin-bottom:20px">⭐ Customer Reviews</h2>
+
+    <div id="reviews-list">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- Add review -->
+    <div class="add-review">
+      <h3 style="margin-bottom:14px;font-size:16px">Write a Review</h3>
+      <div class="star-input" id="star-input">
+        <span onclick="setRating(1)">★</span>
+        <span onclick="setRating(2)">★</span>
+        <span onclick="setRating(3)">★</span>
+        <span onclick="setRating(4)">★</span>
+        <span onclick="setRating(5)">★</span>
+      </div>
+      <div class="form-group">
+        <textarea id="review-text" rows="3"
+          placeholder="Share your experience with this product..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-bottom" style="margin:0">
+    © 2025 KrishiBazar — Shawon Das | ID: 2321025
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+// Same product data as products.html
+const allProducts = [
+  { id:1,  title:'Miniket Rice',     category:'Rice',      price:65,  unit:'kg',    farmer:'Rahim Uddin',    location:'Dinajpur, Rangpur',    rating:5, stock:500, marketAvg:68, img:'https://via.placeholder.com/600x340/2d8653/fff?text=Miniket+Rice' },
+  { id:2,  title:'Fresh Potato',     category:'Vegetable', price:28,  unit:'kg',    farmer:'Karim Mia',      location:'Munshiganj, Dhaka',    rating:4, stock:800, marketAvg:32, img:'https://via.placeholder.com/600x340/fd7e14/fff?text=Fresh+Potato' },
+  { id:3,  title:'Red Tomato',       category:'Vegetable', price:40,  unit:'kg',    farmer:'Salam Sheikh',   location:'Rajshahi',             rating:5, stock:200, marketAvg:45, img:'https://via.placeholder.com/600x340/e83e8c/fff?text=Red+Tomato' },
+  { id:4,  title:'Sweet Mango',      category:'Fruit',     price:120, unit:'kg',    farmer:'Jamal Hossain',  location:'Chapai, Rajshahi',     rating:5, stock:150, marketAvg:140,img:'https://via.placeholder.com/600x340/ffc107/fff?text=Sweet+Mango' },
+  { id:5,  title:'Fresh Hilsa Fish', category:'Fish',      price:900, unit:'kg',    farmer:'Anwar Ali',      location:'Chandpur, Chittagong', rating:4, stock:50,  marketAvg:950,img:'https://via.placeholder.com/600x340/17a2b8/fff?text=Hilsa+Fish' },
+  { id:6,  title:'Cow Milk',         category:'Dairy',     price:70,  unit:'litre', farmer:'Akter Hossain',  location:'Sirajganj, Rajshahi',  rating:4, stock:100, marketAvg:80, img:'https://via.placeholder.com/600x340/6c757d/fff?text=Cow+Milk' },
+  { id:7,  title:'Red Onion',        category:'Spice',     price:75,  unit:'kg',    farmer:'Monir Khan',     location:'Faridpur, Dhaka',      rating:3, stock:600, marketAvg:80, img:'https://via.placeholder.com/600x340/dc3545/fff?text=Red+Onion' },
+  { id:8,  title:'Green Chilli',     category:'Spice',     price:80,  unit:'kg',    farmer:'Razu Mia',       location:'Bogura, Rajshahi',     rating:4, stock:120, marketAvg:90, img:'https://via.placeholder.com/600x340/28a745/fff?text=Green+Chilli' },
+  { id:9,  title:'Brinjal',          category:'Vegetable', price:35,  unit:'kg',    farmer:'Hafiz Uddin',    location:'Khulna',               rating:4, stock:300, marketAvg:40, img:'https://via.placeholder.com/600x340/6f42c1/fff?text=Brinjal' },
+  { id:10, title:'Lemon',            category:'Fruit',     price:60,  unit:'kg',    farmer:'Nuru Islam',     location:'Sylhet',               rating:5, stock:80,  marketAvg:70, img:'https://via.placeholder.com/600x340/ffc107/333?text=Lemon' },
+];
+
+const sampleReviews = [
+  { name:'Kamal Hossain', rating:5, date:'2025-03-12', text:'Excellent quality! Fresh and well-packed. Delivery was on time. Will definitely buy again.' },
+  { name:'Sadia Akter',   rating:4, date:'2025-03-08', text:'Good product, price is fair. Farmer was responsive and helpful. Recommended!' },
+  { name:'Rahim Mia',     rating:5, date:'2025-02-28', text:'Best quality I have seen. Direct from farm, very fresh. KrishiBazar is great platform.' },
+];
+
+let qty = 1;
+let currentProduct = null;
+let selectedRating = 0;
+
+function changeQty(delta) {
+  qty = Math.max(1, Math.min(qty + delta, currentProduct?.stock || 999));
+  document.getElementById('qty-display').textContent = qty;
+  updateTotal();
+}
+
+function updateTotal() {
+  if (currentProduct) {
+    document.getElementById('total-price').textContent =
+      (currentProduct.price * qty).toLocaleString();
+  }
+}
+
+function doAddToCart() {
+  if (!currentProduct) return;
+  addToCart(currentProduct.id, currentProduct.title,
+    currentProduct.price, currentProduct.unit, currentProduct.img);
+}
+
+function buyNow() {
+  doAddToCart();
+  window.location.href = 'cart.html';
+}
+
+function setRating(r) {
+  selectedRating = r;
+  document.querySelectorAll('#star-input span').forEach((s, i) => {
+    s.classList.toggle('lit', i < r);
+  });
+}
+
+function submitReview() {
+  if (!selectedRating) { showToast('Please select a rating', 'error'); return; }
+  const text = document.getElementById('review-text').value.trim();
+  if (!text) { showToast('Please write your review', 'error'); return; }
+
+  const user = getUser();
+  sampleReviews.unshift({
+    name: user ? user.name : 'Anonymous',
+    rating: selectedRating,
+    date: new Date().toISOString().split('T')[0],
+    text
+  });
+  renderReviews();
+  document.getElementById('review-text').value = '';
+  setRating(0);
+  showToast('Review submitted! Thank you 🙏');
+}
+
+function renderReviews() {
+  document.getElementById('reviews-list').innerHTML = sampleReviews.map(r => `
+    <div class="review-card">
+      <div class="review-header">
+        <span class="review-name">👤 ${r.name}</span>
+        <span class="review-date">${r.date}</span>
+      </div>
+      <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+      <p class="review-text">${r.text}</p>
+    </div>
+  `).join('');
+}
+
+// Load product
+const pid = parseInt(localStorage.getItem('viewProduct')) || 1;
+currentProduct = allProducts.find(p => p.id === pid) || allProducts[0];
+
+document.getElementById('prod-img').src = currentProduct.img;
+document.getElementById('prod-img').alt = currentProduct.title;
+document.getElementById('prod-title').textContent = currentProduct.title;
+document.getElementById('prod-category').textContent = currentProduct.category;
+document.getElementById('prod-price').textContent = currentProduct.price;
+document.getElementById('prod-unit').textContent = currentProduct.unit;
+document.getElementById('prod-stock').textContent = currentProduct.stock + ' ' + currentProduct.unit;
+document.getElementById('prod-stars').textContent = '★'.repeat(currentProduct.rating) + '☆'.repeat(5 - currentProduct.rating);
+document.getElementById('prod-rating-txt').textContent = `(${currentProduct.rating}.0) · ${sampleReviews.length} reviews`;
+document.getElementById('prod-market-avg').textContent = `৳ ${currentProduct.marketAvg} / ${currentProduct.unit}`;
+document.getElementById('price-compare').textContent =
+  currentProduct.marketAvg > currentProduct.price
+    ? `You save ৳${currentProduct.marketAvg - currentProduct.price}`
+    : 'Best market price';
+document.getElementById('farmer-name').textContent = currentProduct.farmer;
+document.getElementById('farmer-loc').textContent = currentProduct.location;
+document.getElementById('farmer-initials').textContent = currentProduct.farmer[0];
+document.getElementById('breadcrumb-name').textContent = currentProduct.title;
+document.getElementById('unit-label').textContent = currentProduct.unit;
+document.title = currentProduct.title + ' — KrishiBazar';
+updateTotal();
+renderReviews();
+</script>
+</body>
+</html>

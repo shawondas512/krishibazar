@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Tracking — KrishiBazar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tracking-wrap {
+      max-width: 800px;
+      margin: 36px auto;
+      padding: 0 24px;
+    }
+    .track-header {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .order-id-tag {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1a6b3a;
+    }
+    .track-timeline {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 0;
+      position: relative;
+    }
+    .timeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 44px;
+      width: 2px;
+      height: calc(100% - 8px);
+      background: #dee2e6;
+    }
+    .timeline-item.done:not(:last-child)::after {
+      background: #28a745;
+    }
+    .tl-dot {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: #dee2e6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+    .timeline-item.done .tl-dot {
+      background: #28a745;
+    }
+    .timeline-item.active .tl-dot {
+      background: #1a6b3a;
+      box-shadow: 0 0 0 4px rgba(40,167,69,0.2);
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%   { box-shadow: 0 0 0 0   rgba(40,167,69,0.4); }
+      70%  { box-shadow: 0 0 0 10px rgba(40,167,69,0);   }
+      100% { box-shadow: 0 0 0 0   rgba(40,167,69,0);   }
+    }
+    .tl-content {
+      flex: 1;
+      padding-bottom: 36px;
+    }
+    .tl-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #212529;
+      margin-bottom: 4px;
+    }
+    .timeline-item.pending .tl-title { color: #aaa; }
+    .tl-desc {
+      font-size: 13px;
+      color: #6c757d;
+      margin-bottom: 4px;
+    }
+    .tl-time {
+      font-size: 12px;
+      color: #aaa;
+    }
+    .map-placeholder {
+      background: linear-gradient(135deg, #e8f5e9, #f0f9f4);
+      border: 2px dashed #c3e6cb;
+      border-radius: 14px;
+      padding: 40px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .order-items-card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .search-order-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .search-order-bar input {
+      flex: 1;
+      padding: 12px 18px;
+      border: 1.5px solid #dee2e6;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+    }
+    .search-order-bar input:focus { border-color: #28a745; }
+    .rating-prompt {
+      background: linear-gradient(135deg, #fff9c4, #fffde7);
+      border: 1px solid #fbc02d;
+      border-radius: 14px;
+      padding: 20px;
+      text-align: center;
+    }
+    .star-rate { display: flex; gap: 8px; justify-content: center; margin: 12px 0; }
+    .star-rate span {
+      font-size: 32px;
+      cursor: pointer;
+      color: #dee2e6;
+      transition: color 0.15s;
+    }
+    .star-rate span.lit { color: #ffc107; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+    <li><a href="login.html" id="nav-login" class="btn-nav">Login</a></li>
+    <li><a href="#" id="nav-logout" onclick="logout()"
+      class="btn-nav" style="display:none">Logout</a></li>
+  </ul>
+  <button class="lang-toggle" id="lang-btn" onclick="switchLang()">🇧🇩 বাংলা</button>
+</nav>
+
+<!-- Hero -->
+<div style="background:linear-gradient(135deg,#1a6b3a,#2d8653);
+  padding:28px 24px;color:white;text-align:center">
+  <h1 style="font-size:26px;margin-bottom:6px">📦 Track Your Order</h1>
+  <p style="opacity:0.9">Real-time updates on your delivery status</p>
+</div>
+
+<div class="tracking-wrap">
+
+  <!-- Search bar -->
+  <div class="search-order-bar">
+    <input type="text" id="order-search"
+      placeholder="Enter Order ID (e.g. ORD-2241)">
+    <button class="btn btn-primary" onclick="searchOrder()">Track</button>
+  </div>
+
+  <!-- Order header -->
+  <div class="track-header">
+    <div>
+      <div style="font-size:13px;color:#6c757d;margin-bottom:4px">Order ID</div>
+      <div class="order-id-tag" id="display-order-id">ORD-2241</div>
+      <div style="font-size:13px;color:#6c757d;margin-top:4px">
+        Placed on <span id="order-date">April 18, 2025</span>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <span class="badge badge-success" style="font-size:14px;padding:8px 16px"
+        id="order-status-badge">🚚 In Transit</span>
+      <div style="font-size:13px;color:#6c757d;margin-top:8px">
+        Expected: <strong id="expected-date">April 22, 2025</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div class="track-timeline">
+    <h3 style="font-size:17px;font-weight:700;color:#1a6b3a;margin-bottom:28px">
+      Delivery Progress
+    </h3>
+
+    <div class="timeline-item done">
+      <div class="tl-dot">✓</div>
+      <div class="tl-content">
+        <div class="tl-title">Order Confirmed</div>
+        <div class="tl-desc">Your order has been confirmed by the farmer</div>
+        <div class="tl-time">April 18, 2025 — 10:32 AM</div>
+      </div>
+    </div>
+
+    <div class="timeline-item done">
+      <div class="tl-dot">✓</div>
+      <div class="tl-content">
+        <div class="tl-title">Payment Verified</div>
+        <div class="tl-desc">Payment received via bKash successfully</div>
+        <div class="tl-time">April 18, 2025 — 11:05 AM</div>
+      </div>
+    </div>
+
+    <div class="timeline-item done">
+      <div class="tl-dot">✓</div>
+      <div class="tl-content">
+        <div class="tl-title">Harvested & Packed</div>
+        <div class="tl-desc">Farmer packed your fresh produce for delivery</div>
+        <div class="tl-time">April 19, 2025 — 7:00 AM</div>
+      </div>
+    </div>
+
+    <div class="timeline-item active">
+      <div class="tl-dot">🚚</div>
+      <div class="tl-content">
+        <div class="tl-title">Out for Delivery</div>
+        <div class="tl-desc">
+          Your order is on the way!
+          Rider: <strong>Raju Delivery</strong> · 📞 01755-666666
+        </div>
+        <div class="tl-time">April 20, 2025 — 9:15 AM · <em>In Progress</em></div>
+      </div>
+    </div>
+
+    <div class="timeline-item pending">
+      <div class="tl-dot">🏠</div>
+      <div class="tl-content">
+        <div class="tl-title" style="color:#aaa">Delivered</div>
+        <div class="tl-desc">Awaiting delivery completion</div>
+        <div class="tl-time">Expected: April 22, 2025</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Map placeholder -->
+  <div class="map-placeholder">
+    <div style="font-size:48px;margin-bottom:12px">🗺️</div>
+    <h3 style="color:#1a6b3a;margin-bottom:8px">Live Map Tracking</h3>
+    <p style="color:#6c757d;font-size:14px">
+      Real-time GPS tracking will be available here after backend integration.
+      <br>Rider is currently <strong style="color:#1a6b3a">12 km</strong>
+      away from your location.
+    </p>
+    <div style="margin-top:16px;background:white;border-radius:10px;
+      padding:14px;display:inline-block;font-size:14px">
+      📍 Current location: <strong>Demra, Dhaka</strong> →
+      🏠 Destination: <strong id="dest-district">Dhaka</strong>
+    </div>
+  </div>
+
+  <!-- Order items -->
+  <div class="order-items-card">
+    <h3 style="font-size:16px;font-weight:700;color:#1a6b3a;margin-bottom:16px">
+      🛒 Items in this Order
+    </h3>
+    <div id="order-items-list">
+      <div style="display:flex;justify-content:space-between;
+        padding:12px 0;border-bottom:1px solid #f5f5f5;font-size:14px">
+        <div>
+          <div style="font-weight:700">Miniket Rice</div>
+          <div style="color:#6c757d;font-size:13px">50 kg × ৳65</div>
+        </div>
+        <div style="font-weight:700;color:#1a6b3a">৳ 3,250</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;
+      padding:12px 0;font-size:15px;font-weight:800;color:#1a6b3a">
+      <span>Total Paid</span>
+      <span id="order-total">৳ 3,310</span>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <button class="btn btn-outline" style="font-size:13px;padding:8px 16px"
+        onclick="showToast('Invoice downloaded!')">
+        📄 Download Invoice
+      </button>
+      <button class="btn btn-outline" style="font-size:13px;padding:8px 16px;
+        border-color:#dc3545;color:#dc3545"
+        onclick="showToast('Cancellation requested. We will contact you.','error')">
+        ✕ Cancel Order
+      </button>
+    </div>
+  </div>
+
+  <!-- Rate & Review (shown after delivery) -->
+  <div class="rating-prompt">
+    <h3 style="color:#1a6b3a;margin-bottom:6px">⭐ Rate Your Experience</h3>
+    <p style="font-size:14px;color:#6c757d;margin-bottom:4px">
+      How was the quality of your order?
+    </p>
+    <div class="star-rate" id="star-rate">
+      <span onclick="rateOrder(1)">★</span>
+      <span onclick="rateOrder(2)">★</span>
+      <span onclick="rateOrder(3)">★</span>
+      <span onclick="rateOrder(4)">★</span>
+      <span onclick="rateOrder(5)">★</span>
+    </div>
+    <div class="form-group" style="max-width:400px;margin:0 auto 12px">
+      <textarea id="rate-comment" rows="2"
+        placeholder="Leave a comment for the farmer..."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="submitRating()">Submit Review</button>
+  </div>
+
+</div>
+
+<footer style="margin-top:40px">
+  <div class="footer-bottom" style="margin:0">
+    © 2025 KrishiBazar — Shawon Das | ID: 2321025
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+let selectedRating = 0;
+
+function rateOrder(r) {
+  selectedRating = r;
+  document.querySelectorAll('#star-rate span').forEach((s, i) => {
+    s.classList.toggle('lit', i < r);
+  });
+}
+
+function submitRating() {
+  if (!selectedRating) { showToast('Please select a star rating', 'error'); return; }
+  showToast('Thank you for your review! ⭐');
+  document.querySelector('.rating-prompt').innerHTML = `
+    <div style="font-size:48px;margin-bottom:8px">🙏</div>
+    <h3 style="color:#1a6b3a">Thank you for your feedback!</h3>
+    <p style="color:#6c757d;font-size:14px">
+      Your ${selectedRating}-star review helps other buyers and motivates our farmers.
+    </p>
+  `;
+}
+
+function searchOrder() {
+  const id = document.getElementById('order-search').value.trim().toUpperCase();
+  if (!id.startsWith('ORD-') || id.length < 7) {
+    showToast('Enter a valid Order ID like ORD-2241', 'error'); return;
+  }
+  document.getElementById('display-order-id').textContent = id;
+  showToast('Order ' + id + ' loaded!');
+}
+
+// Load last order if available
+const lastOrder = localStorage.getItem('lastOrder');
+if (lastOrder) {
+  document.getElementById('display-order-id').textContent = lastOrder;
+  document.getElementById('order-search').value = lastOrder;
+
+  const orders = JSON.parse(localStorage.getItem('myOrders') || '[]');
+  const order = orders.find(o => o.id === lastOrder);
+  if (order) {
+    document.getElementById('order-items-list').innerHTML =
+      order.items.map(i => `
+        <div style="display:flex;justify-content:space-between;
+          padding:12px 0;border-bottom:1px solid #f5f5f5;font-size:14px">
+          <div>
+            <div style="font-weight:700">${i.name}</div>
+            <div style="color:#6c757d;font-size:13px">${i.qty} ${i.unit} × ৳${i.price}</div>
+          </div>
+          <div style="font-weight:700;color:#1a6b3a">
+            ৳ ${(i.price*i.qty).toLocaleString()}
+          </div>
+        </div>
+      `).join('');
+    document.getElementById('order-total').textContent =
+      '৳ ' + order.total.toLocaleString();
+    if (order.delivery?.district) {
+      document.getElementById('dest-district').textContent = order.delivery.district;
+    }
+  }
+}
+</script>
+</body>
+</html>

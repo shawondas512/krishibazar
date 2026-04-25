@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — KrishiBazar</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-wrapper {
+      min-height: calc(100vh - 60px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+      background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%);
+    }
+    .login-box {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+    }
+    .login-box h2 { color: #1a6b3a; margin-bottom: 6px; font-size: 26px; }
+    .login-box p { color: #6c757d; margin-bottom: 28px; font-size: 14px; }
+    .demo-accounts {
+      background: #f0f9f4;
+      border: 1px solid #c3e6cb;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+    .demo-accounts strong { color: #1a6b3a; }
+    .demo-btn {
+      display: inline-block;
+      padding: 4px 10px;
+      border: 1px solid #28a745;
+      border-radius: 6px;
+      background: white;
+      color: #1a6b3a;
+      font-size: 12px;
+      cursor: pointer;
+      margin: 4px 2px 0;
+      transition: all 0.2s;
+    }
+    .demo-btn:hover { background: #28a745; color: white; }
+    .divider {
+      text-align: center;
+      color: #6c757d;
+      font-size: 13px;
+      margin: 20px 0;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: #dee2e6;
+    }
+    .divider::before { left: 0; }
+    .divider::after { right: 0; }
+    .show-pass {
+      position: relative;
+    }
+    .show-pass input { padding-right: 44px; }
+    .show-pass .eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="index.html" class="logo">Krishi<span>Bazar</span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="products.html">Products</a></li>
+  </ul>
+  <button class="lang-toggle" id="lang-btn" onclick="switchLang()">🇧🇩 বাংলা</button>
+</nav>
+
+<div class="login-wrapper">
+  <div class="login-box">
+    <h2>Welcome Back 👋</h2>
+    <p>Login to your KrishiBazar account</p>
+
+    <!-- Demo accounts shortcut -->
+    <div class="demo-accounts">
+      <strong>Demo accounts (click to fill):</strong><br>
+      <button class="demo-btn" onclick="fillDemo('farmer')">👨‍🌾 Farmer</button>
+      <button class="demo-btn" onclick="fillDemo('retailer')">🏪 Retailer</button>
+      <button class="demo-btn" onclick="fillDemo('consumer')">🏠 Consumer</button>
+      <button class="demo-btn" onclick="fillDemo('admin')">⚙️ Admin</button>
+    </div>
+
+    <div id="login-error" class="alert alert-danger" style="display:none"></div>
+
+    <div class="form-group">
+      <label>Mobile Number</label>
+      <input type="tel" id="login-phone" placeholder="01XXXXXXXXX" maxlength="11">
+    </div>
+
+    <div class="form-group">
+      <label>Password</label>
+      <div class="show-pass">
+        <input type="password" id="login-password" placeholder="Enter password">
+        <button class="eye-btn" onclick="togglePass()">👁️</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">
+        <input type="checkbox" id="remember"> Remember me
+      </label>
+      <a href="#" style="color:#28a745;font-size:13px;text-decoration:none">Forgot password?</a>
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="doLogin()">Login →</button>
+
+    <div class="divider">new to KrishiBazar?</div>
+    <a href="register.html" class="btn btn-outline btn-full">Create Account</a>
+  </div>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+  // Demo user data (will be replaced by real API later)
+  const demoUsers = {
+    farmer:   { phone: '01711111111', password: '123456', name: 'Rahim Farmer',    role: 'farmer',   token: 'tok-farmer' },
+    retailer: { phone: '01722222222', password: '123456', name: 'Karim Retailer',  role: 'retailer', token: 'tok-retailer' },
+    consumer: { phone: '01733333333', password: '123456', name: 'Sadia Consumer',  role: 'consumer', token: 'tok-consumer' },
+    admin:    { phone: '01744444444', password: '123456', name: 'Admin User',       role: 'admin',    token: 'tok-admin' }
+  };
+
+  function fillDemo(role) {
+    const u = demoUsers[role];
+    document.getElementById('login-phone').value = u.phone;
+    document.getElementById('login-password').value = u.password;
+  }
+
+  function togglePass() {
+    const inp = document.getElementById('login-password');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  async function doLogin() {
+  const phone    = document.getElementById('login-phone').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!phone || !password) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block'; return;
+  }
+
+  const result = await apiCall('auth.php?action=login', 'POST', { phone, password });
+
+  if (result.success) {
+    localStorage.setItem('user', JSON.stringify(result.data));
+    showToast('Login successful! Welcome, ' + result.data.name);
+    setTimeout(() => {
+      if (result.data.role === 'farmer') window.location.href = 'farmer-dashboard.html';
+      else if (result.data.role === 'admin') window.location.href = 'admin-dashboard.html';
+      else window.location.href = 'buyer-dashboard.html';
+    }, 800);
+  } else {
+    errEl.textContent = result.message || 'Login failed.';
+    errEl.style.display = 'block';
+  }
+}
+
+    // Check demo users (later: API call to api/auth.php)
+    const user = Object.values(demoUsers).find(u => u.phone === phone && u.password === password);
+
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      showToast('Login successful! Welcome, ' + user.name);
+      setTimeout(() => {
+        if (user.role === 'farmer') window.location.href = 'farmer-dashboard.html';
+        else if (user.role === 'admin') window.location.href = 'admin-dashboard.html';
+        else window.location.href = 'buyer-dashboard.html';
+      }, 800);
+    } else {
+      errEl.textContent = 'Invalid mobile number or password.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  // Allow Enter key to login
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>
