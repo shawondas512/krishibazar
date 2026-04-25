@@ -23,7 +23,7 @@
       max-width: 420px;
     }
     .login-box h2 { color: #1a6b3a; margin-bottom: 6px; font-size: 26px; }
-    .login-box p { color: #6c757d; margin-bottom: 28px; font-size: 14px; }
+    .login-box p  { color: #6c757d; margin-bottom: 28px; font-size: 14px; }
     .demo-accounts {
       background: #f0f9f4;
       border: 1px solid #c3e6cb;
@@ -62,10 +62,8 @@
       background: #dee2e6;
     }
     .divider::before { left: 0; }
-    .divider::after { right: 0; }
-    .show-pass {
-      position: relative;
-    }
+    .divider::after  { right: 0; }
+    .show-pass { position: relative; }
     .show-pass input { padding-right: 44px; }
     .show-pass .eye-btn {
       position: absolute;
@@ -127,82 +125,110 @@
       <a href="#" style="color:#28a745;font-size:13px;text-decoration:none">Forgot password?</a>
     </div>
 
-    <button class="btn btn-primary btn-full" onclick="doLogin()">Login →</button>
+    <button class="btn btn-primary btn-full" id="login-btn" onclick="doLogin()">
+      Login →
+    </button>
 
     <div class="divider">new to KrishiBazar?</div>
     <a href="register.html" class="btn btn-outline btn-full">Create Account</a>
+
+    <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px">
+      ⚙️ Admin account cannot be created via registration
+    </p>
   </div>
 </div>
 
 <script src="js/main.js"></script>
 <script>
-  // Demo user data (will be replaced by real API later)
+
+  // ── Demo accounts (password = 'password') ──────────────────────────
   const demoUsers = {
-    farmer:   { phone: '01711111111', password: '123456', name: 'Rahim Farmer',    role: 'farmer',   token: 'tok-farmer' },
-    retailer: { phone: '01722222222', password: '123456', name: 'Karim Retailer',  role: 'retailer', token: 'tok-retailer' },
-    consumer: { phone: '01733333333', password: '123456', name: 'Sadia Consumer',  role: 'consumer', token: 'tok-consumer' },
-    admin:    { phone: '01744444444', password: '123456', name: 'Admin User',       role: 'admin',    token: 'tok-admin' }
+    farmer:   { phone: '01711111111', password: 'password', name: 'Rahim Uddin',    role: 'farmer',   token: 'tok-farmer'   },
+    retailer: { phone: '01722222222', password: 'password', name: 'Karim Retailer', role: 'retailer', token: 'tok-retailer' },
+    consumer: { phone: '01733333333', password: 'password', name: 'Sadia Consumer', role: 'consumer', token: 'tok-consumer' },
+    admin:    { phone: '01744444444', password: 'password', name: 'Admin User',      role: 'admin',    token: 'tok-admin'    }
   };
 
   function fillDemo(role) {
     const u = demoUsers[role];
-    document.getElementById('login-phone').value = u.phone;
+    document.getElementById('login-phone').value    = u.phone;
     document.getElementById('login-password').value = u.password;
+    document.getElementById('login-error').style.display = 'none';
   }
 
   function togglePass() {
     const inp = document.getElementById('login-password');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
+    inp.type  = inp.type === 'password' ? 'text' : 'password';
+  }
+
+  function redirectByRole(role) {
+    if      (role === 'admin')   window.location.href = 'admin-dashboard.html';
+    else if (role === 'farmer')  window.location.href = 'farmer-dashboard.html';
+    else                         window.location.href = 'buyer-dashboard.html';
   }
 
   async function doLogin() {
-  const phone    = document.getElementById('login-phone').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl    = document.getElementById('login-error');
-  errEl.style.display = 'none';
+    const phone    = document.getElementById('login-phone').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errEl    = document.getElementById('login-error');
+    const btn      = document.getElementById('login-btn');
 
-  if (!phone || !password) {
-    errEl.textContent = 'Please fill in all fields.';
-    errEl.style.display = 'block'; return;
-  }
+    errEl.style.display = 'none';
 
-  const result = await apiCall('auth.php?action=login', 'POST', { phone, password });
-
-  if (result.success) {
-    localStorage.setItem('user', JSON.stringify(result.data));
-    showToast('Login successful! Welcome, ' + result.data.name);
-    setTimeout(() => {
-      if (result.data.role === 'farmer') window.location.href = 'farmer-dashboard.html';
-      else if (result.data.role === 'admin') window.location.href = 'admin-dashboard.html';
-      else window.location.href = 'buyer-dashboard.html';
-    }, 800);
-  } else {
-    errEl.textContent = result.message || 'Login failed.';
-    errEl.style.display = 'block';
-  }
-}
-
-    // Check demo users (later: API call to api/auth.php)
-    const user = Object.values(demoUsers).find(u => u.phone === phone && u.password === password);
-
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-      showToast('Login successful! Welcome, ' + user.name);
-      setTimeout(() => {
-        if (user.role === 'farmer') window.location.href = 'farmer-dashboard.html';
-        else if (user.role === 'admin') window.location.href = 'admin-dashboard.html';
-        else window.location.href = 'buyer-dashboard.html';
-      }, 800);
-    } else {
-      errEl.textContent = 'Invalid mobile number or password.';
+    if (!phone || !password) {
+      errEl.textContent   = 'Please fill in all fields.';
       errEl.style.display = 'block';
+      return;
     }
-  
 
-  // Allow Enter key to login
+    // Loading state
+    btn.disabled   = true;
+    btn.textContent = 'Logging in...';
+
+    // ── Step 1: Try real PHP API ──────────────────────────────────────
+    try {
+      const result = await apiCall('auth.php?action=login', 'POST', { phone, password });
+      if (result && result.success) {
+        localStorage.setItem('user', JSON.stringify(result.data));
+        showToast('Welcome, ' + result.data.name + '! 👋');
+        setTimeout(() => redirectByRole(result.data.role), 800);
+        return;
+      }
+    } catch (e) {
+      // API not available — fall through to demo check
+    }
+
+    // ── Step 2: Check demo accounts ───────────────────────────────────
+    const demo = Object.values(demoUsers).find(
+      u => u.phone === phone && u.password === password
+    );
+
+    if (demo) {
+      localStorage.setItem('user', JSON.stringify(demo));
+      showToast('Welcome, ' + demo.name + '! 👋');
+      setTimeout(() => redirectByRole(demo.role), 800);
+      return;
+    }
+
+    // ── Step 3: Both failed ───────────────────────────────────────────
+    errEl.textContent   = 'Invalid mobile number or password.';
+    errEl.style.display = 'block';
+    btn.disabled        = false;
+    btn.textContent     = 'Login →';
+  }
+
+  // Enter key support
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
+
+  // Remember me — restore phone
+  const saved = localStorage.getItem('remembered_phone');
+  if (saved) {
+    document.getElementById('login-phone').value = saved;
+    document.getElementById('remember').checked  = true;
+  }
+
 </script>
 </body>
 </html>
