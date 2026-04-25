@@ -76,17 +76,6 @@
       font-size: 18px;
       color: #6c757d;
     }
-    .loading-spinner {
-      display: inline-block;
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -105,13 +94,13 @@
     <h2>Welcome Back 👋</h2>
     <p>Login to your KrishiBazar account</p>
 
-    <!-- Demo accounts -->
+    <!-- Demo accounts shortcut -->
     <div class="demo-accounts">
       <strong>Demo accounts (click to fill):</strong><br>
-      <button class="demo-btn" onclick="fillDemo('admin')">⚙️ Admin</button>
       <button class="demo-btn" onclick="fillDemo('farmer')">👨‍🌾 Farmer</button>
       <button class="demo-btn" onclick="fillDemo('retailer')">🏪 Retailer</button>
       <button class="demo-btn" onclick="fillDemo('consumer')">🏠 Consumer</button>
+      <button class="demo-btn" onclick="fillDemo('admin')">⚙️ Admin</button>
     </div>
 
     <div id="login-error" class="alert alert-danger" style="display:none"></div>
@@ -143,8 +132,8 @@
     <div class="divider">new to KrishiBazar?</div>
     <a href="register.html" class="btn btn-outline btn-full">Create Account</a>
 
-    <p style="font-size:12px;color:#aaa;text-align:center;margin-top:16px">
-      ℹ️ Admin accounts cannot be created via registration.
+    <p style="font-size:11px;color:#aaa;text-align:center;margin-top:14px">
+      ⚙️ Admin account cannot be created via registration
     </p>
   </div>
 </div>
@@ -152,12 +141,12 @@
 <script src="js/main.js"></script>
 <script>
 
-  // ─── Demo credentials ───────────────────────────────────────────────
+  // ── Demo accounts (password = 'password') ──────────────────────────
   const demoUsers = {
-    admin:    { phone: '01744444444', password: 'password', name: 'Admin User',      role: 'admin'    },
-    farmer:   { phone: '01711111111', password: 'password', name: 'Rahim Uddin',     role: 'farmer'   },
-    retailer: { phone: '01722222222', password: 'password', name: 'Karim Retailer',  role: 'retailer' },
-    consumer: { phone: '01733333333', password: 'password', name: 'Sadia Consumer',  role: 'consumer' }
+    farmer:   { phone: '01711111111', password: 'password', name: 'Rahim Uddin',    role: 'farmer',   token: 'tok-farmer'   },
+    retailer: { phone: '01722222222', password: 'password', name: 'Karim Retailer', role: 'retailer', token: 'tok-retailer' },
+    consumer: { phone: '01733333333', password: 'password', name: 'Sadia Consumer', role: 'consumer', token: 'tok-consumer' },
+    admin:    { phone: '01744444444', password: 'password', name: 'Admin User',      role: 'admin',    token: 'tok-admin'    }
   };
 
   function fillDemo(role) {
@@ -172,14 +161,12 @@
     inp.type  = inp.type === 'password' ? 'text' : 'password';
   }
 
-  // ─── Redirect helper ────────────────────────────────────────────────
   function redirectByRole(role) {
-    if      (role === 'admin')    window.location.href = 'admin-dashboard.html';
-    else if (role === 'farmer')   window.location.href = 'farmer-dashboard.html';
-    else                          window.location.href = 'buyer-dashboard.html';
+    if      (role === 'admin')   window.location.href = 'admin-dashboard.html';
+    else if (role === 'farmer')  window.location.href = 'farmer-dashboard.html';
+    else                         window.location.href = 'buyer-dashboard.html';
   }
 
-  // ─── Main login function ─────────────────────────────────────────────
   async function doLogin() {
     const phone    = document.getElementById('login-phone').value.trim();
     const password = document.getElementById('login-password').value;
@@ -189,86 +176,56 @@
     errEl.style.display = 'none';
 
     if (!phone || !password) {
-      errEl.textContent    = '⚠️ Please fill in all fields.';
-      errEl.style.display  = 'block';
+      errEl.textContent   = 'Please fill in all fields.';
+      errEl.style.display = 'block';
       return;
     }
 
-    // Show loading state
-    btn.disabled    = true;
-    btn.innerHTML   = '<span class="loading-spinner"></span> Logging in...';
+    // Loading state
+    btn.disabled   = true;
+    btn.textContent = 'Logging in...';
 
+    // ── Step 1: Try real PHP API ──────────────────────────────────────
     try {
-      // ── Try real PHP API first ──────────────────────────────────────
       const result = await apiCall('auth.php?action=login', 'POST', { phone, password });
-
       if (result && result.success) {
         localStorage.setItem('user', JSON.stringify(result.data));
         showToast('Welcome, ' + result.data.name + '! 👋');
         setTimeout(() => redirectByRole(result.data.role), 800);
         return;
       }
-
-      // ── API returned error — try demo fallback ──────────────────────
-      const demoMatch = Object.values(demoUsers).find(
-        u => u.phone === phone && u.password === password
-      );
-
-      if (demoMatch) {
-        const userData = {
-          id: Math.floor(Math.random() * 900) + 1,
-          name:     demoMatch.name,
-          phone:    demoMatch.phone,
-          role:     demoMatch.role,
-          district: 'Dhaka',
-          token:    'demo-token-' + demoMatch.role
-        };
-        localStorage.setItem('user', JSON.stringify(userData));
-        showToast('Welcome, ' + userData.name + '! 👋');
-        setTimeout(() => redirectByRole(userData.role), 800);
-        return;
-      }
-
-      // ── Both failed ─────────────────────────────────────────────────
-      errEl.textContent   = result?.message || '❌ Invalid mobile number or password.';
-      errEl.style.display = 'block';
-
     } catch (e) {
-      // ── Network error — try demo fallback ───────────────────────────
-      const demoMatch = Object.values(demoUsers).find(
-        u => u.phone === phone && u.password === password
-      );
-
-      if (demoMatch) {
-        const userData = {
-          id: 1, name: demoMatch.name, phone: demoMatch.phone,
-          role: demoMatch.role, district: 'Dhaka',
-          token: 'demo-token-' + demoMatch.role
-        };
-        localStorage.setItem('user', JSON.stringify(userData));
-        showToast('Welcome, ' + userData.name + '! 👋');
-        setTimeout(() => redirectByRole(userData.role), 800);
-        return;
-      }
-
-      errEl.textContent   = '❌ Invalid mobile number or password.';
-      errEl.style.display = 'block';
+      // API not available — fall through to demo check
     }
 
-    // Reset button
-    btn.disabled  = false;
-    btn.innerHTML = 'Login →';
+    // ── Step 2: Check demo accounts ───────────────────────────────────
+    const demo = Object.values(demoUsers).find(
+      u => u.phone === phone && u.password === password
+    );
+
+    if (demo) {
+      localStorage.setItem('user', JSON.stringify(demo));
+      showToast('Welcome, ' + demo.name + '! 👋');
+      setTimeout(() => redirectByRole(demo.role), 800);
+      return;
+    }
+
+    // ── Step 3: Both failed ───────────────────────────────────────────
+    errEl.textContent   = 'Invalid mobile number or password.';
+    errEl.style.display = 'block';
+    btn.disabled        = false;
+    btn.textContent     = 'Login →';
   }
 
-  // ─── Enter key support ───────────────────────────────────────────────
+  // Enter key support
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
 
-  // ─── Auto-fill if remembered ─────────────────────────────────────────
-  const remembered = localStorage.getItem('remembered_phone');
-  if (remembered) {
-    document.getElementById('login-phone').value = remembered;
+  // Remember me — restore phone
+  const saved = localStorage.getItem('remembered_phone');
+  if (saved) {
+    document.getElementById('login-phone').value = saved;
     document.getElementById('remember').checked  = true;
   }
 
